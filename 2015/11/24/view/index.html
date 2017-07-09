@@ -1,0 +1,158 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="YueYang"><title>自定义View · YueYang's Blog</title><meta name="description" content="View对于View来说，在进行绘制之前，需要知道绘制的坐标和位置。Android API中提供了一个MeasureSpec类来测量View。它有三种模式：
+
+EXACITY控件的layout_width或者layout_height属性设置具体的值的时使用这种模式
+AT_MOST控件的layout"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">YueYang's Blog</a></h3></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a href="https://www.caicai.me"> CaiCai </a><span>&</span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">归档</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"></a></li></div><div class="avatar"><img></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>自定义View</a></h3></div><div class="post-content"><h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>对于View来说，在进行绘制之前，需要知道绘制的坐标和位置。Android API中提供了一个MeasureSpec类来测量View。它有三种模式：</p>
+<ul>
+<li>EXACITY<br>控件的layout_width或者layout_height属性设置具体的值的时使用这种模式</li>
+<li>AT_MOST<br>控件的layout_width或者layout_height属性设置”wrap_content”时使用这种模式</li>
+<li>UNSPECIFIED<br>控件的大小没有限制(The parent has not imposed any constraint on the child，<a href="http://developer.android.com/intl/zh-cn/reference/android/view/View.MeasureSpec.html" target="_blank" rel="external">Developer原文链接</a>)</li>
+</ul>
+<a id="more"></a>
+<p>通过MeasureSpec类可以获取View的Mode和View的size</p>
+<pre><code>int specMode = MeasureSpec.getMode(measureSpec);
+int specSize = measureSpec.getSize(measureSpec);
+</code></pre><p>然后重写onMeasure()中的setMeasuredDimension()方法</p>
+<pre><code>protected void onMeasure(int widthMeasureSpec,
+  int heightMeasureSpec) {
+    setMeasuredDimension(measureWidth(widthMeasureSpec),
+     measureHeight(heightMeasureSpec));
+}
+</code></pre><h2 id="View绘制"><a href="#View绘制" class="headerlink" title="View绘制"></a>View绘制</h2><p>很多情况下，现有的控件不能满足我们的需要，所以就要对现有的控件拓展(比如带边框的ImageView)或者重写View来实现一个新的控件。</p>
+<ul>
+<li>对现有的控件进行拓展<br>比如给TextView添加一个简单的边框，</li>
+</ul>
+<pre><code>
+ private Paint customPaint(){
+            Paint paint = new Paint();
+            //设置颜色
+            paint.setColor(getResources().getColor(R.color.grey));
+            //设置为空心
+            paint.setStyle(Paint.Style.STROKE);
+
+            return paint;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+
+          Paint paint = customPaint();
+          //绘制内层矩形
+          canvas.drawRect(0,0,
+          getMeasuredWidth(),
+          getMeasuredHeight(),
+          paint);
+          //保存状态
+          canvas.save();
+
+          //因为现在只是部分元素修改，所以还需要调用父类的实现
+          super.onDraw(canvas);
+
+          //恢复到保存之前的状态
+          canvas.restore();
+        }
+
+</code></pre>
+
+
+
+<ul>
+<li><p>重写View实现新的组件</p>
+<p>比如绘制一个圆,首先在res/values目录下建立attrs.xml的文件,在定义里声明属性和具体的样式。</p>
+</li>
+</ul>
+<pre><code>  &lt;declare-styleable name=&quot;CustomCircle&quot;&gt;
+   &lt;attr name=&quot;circle_title&quot; format=&quot;string&quot;/&gt;
+   &lt;attr name=&quot;circle_title_size&quot; format=&quot;dimension&quot;/&gt;
+   &lt;attr name=&quot;circle_title_color&quot; format=&quot;color&quot;/&gt;
+   &lt;attr name=&quot;circle_background_color&quot; format=&quot;color&quot;/&gt;
+&lt;/declare-styleable&gt;
+</code></pre><p>然后在然后在获取自定义的属性</p>
+<pre><code>public CustomCircle(Context context,AttributeSet attrs,int defStyleAttr) {
+   super(context, attrs, defStyleAttr);
+   init(context,attrs);
+}
+
+private void init(Context context,AttributeSet attributeSet){
+    TypedArray at = context.obtainStyledAttributes(attributeSet,
+      R.styleable.CustomCircle);
+    circleTitle = at.getString(
+      R.styleable.CustomCircle_circle_title);
+    circleTitleColor = at.getInt(
+      R.styleable.CustomCircle_circle_title_color,R.color.pink);
+    circleTitleSize = at.getDimension(
+      R.styleable.CustomCircle_circle_title_size,20);
+    circleBackgroundColor = at.getInt(
+      R.styleable.CustomCircle_circle_background_color,R.color.grey);
+}
+</code></pre><p>这里有个注意点，构造器的数量要&gt;=3，不然会报这样的错误</p>
+<pre><code>&quot; java not using the 2- or 3-argument View constructors;
+ XML attributes will not work &quot;
+</code></pre><p>接着，跟拓展控件一样，需要重写onDraw()方法</p>
+<pre><code>@Override
+protected void onDraw(Canvas canvas{
+  super.onDraw(canvas);
+
+  Paint paint = paintCircle();
+  canvas.drawCircle(
+    getWidth() / 2f,
+    getHeight() / 2f,
+    getWidth() / 2f,
+    paint);
+  canvas.save();
+
+  paint.setColor(circleTitleColor);
+  canvas.drawText(
+         circleTitle,
+         getWidth() / 2f - boundRect.width(),
+         getHeight() / 2f - boundRect.height(),
+         paint);
+
+}
+
+private Paint paintCircle(){
+  Paint paint = new Paint();
+  //在画笔中设置定义好的属性
+  paint.setTextSize(circleTitleSize);
+  paint.setColor(circleBackgroundColor);
+
+  boundRect = new Rect();
+  paint.getTextBounds(
+   circleTitle,
+   0,
+   circleTitle.length(),
+   boundRect);
+
+  return paint;
+ }
+</code></pre><p>最后和普通的控件一样，直接在XML中设置各个属性即可</p>
+<pre><code>&lt;com.yueyang.customview.CustomCircle
+  custom:circle_title=&quot;Custom Circle&quot;
+  custom:circle_title_color=&quot;@color/pink&quot;
+  custom:circle_background_color=&quot;@color/grey&quot;
+  custom:circle_title_size=&quot;15dp&quot;
+  android:layout_width=&quot;160dp&quot;
+  android:layout_height=&quot;160dp&quot; /&gt;
+</code></pre><p>这里也有一个注意点，在布局中使用第三方组件时，需要引入命名控件</p>
+<pre><code>xmlns:custom=&quot;http://schemas.android.com/apk/res-auto&quot;
+</code></pre><p>(custom非固定，可以随意设置)</p>
+<h2 id="最佳实践————带边框的圆形ImageView"><a href="#最佳实践————带边框的圆形ImageView" class="headerlink" title="最佳实践————带边框的圆形ImageView"></a>最佳实践————带边框的圆形ImageView</h2><p>重复造轮子，参考是<a href="http://blog.csdn.net/gebitan505/article/details/27679587" target="_blank" rel="external">这篇博客</a>，思路是：</p>
+<ol>
+<li>圆形的绘制</li>
+<li>图片的转换</li>
+</ol>
+<ul>
+<li>图片非规则图片装成正方形</li>
+<li>如果图片过大， 从图片的正中截取图片</li>
+<li>将截取到的图片转化成圆形</li>
+<li>将截取到的图片转化成圆形<br> 主要涉及的内容是Paint.setXfermode()方法,<a href="http://blog.csdn.net/hiyohu/article/details/12509731" target="_blank" rel="external">详解链接</a></li>
+</ul>
+<p>这篇要完成的最终的效果：<br><img src="/images/view.png" alt=""></p>
+<h3 id="代码下载-https-github-com-hiyangyue-Training-tree-master-CustomView"><a href="#代码下载-https-github-com-hiyangyue-Training-tree-master-CustomView" class="headerlink" title="代码下载    https://github.com/hiyangyue/Training/tree/master/CustomView"></a><a href="https://github.com/hiyangyue/Training/tree/master/CustomView" target="_blank" rel="external">代码下载</a>    <a href="https://github.com/hiyangyue/Training/tree/master/CustomView" target="_blank" rel="external">https://github.com/hiyangyue/Training/tree/master/CustomView</a></h3><h2 id="本文参考："><a href="#本文参考：" class="headerlink" title="本文参考："></a>本文参考：</h2><ul>
+<li><a href="http://blog.csdn.net/hiyohu/article/details/12509731" target="_blank" rel="external">android Paint之setXfermode方法</a></li>
+<li><a href="http://blog.csdn.net/gebitan505/article/details/27679587" target="_blank" rel="external">自定义View(二)</a></li>
+<li><a href="http://blog.sina.com.cn/s/blog_ac843e3301011umy.html" target="_blank" rel="external">关于Bitmap的createScaleBitmap()的小结 </a></li>
+<li><a href="http://www.cnblogs.com/igrl/archive/2010/07/30/Bitmap_createBitmap.html" target="_blank" rel="external"> Bitmap.createBitmap函数有6个重载方法</a></li>
+<li><a href="http://blog.csdn.net/huangxiaominglipeng/article/details/21597575" target="_blank" rel="external">android.graphics.Rect类的详解</a></li>
+<li><a href="http://byandby.iteye.com/blog/824819" target="_blank" rel="external">android Paint和Color类介绍 使用示例</a></li>
+</ul>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2015-11-24</span><i class="fa fa-tag"></i><a href="/categories/Android/" title="Android" class="tag">Android </a><a href="/tags/Android/" title="Android" class="tag">Android </a><a href="/tags/View/" title="View" class="tag">View </a></div></div></div></div><div class="share"><div class="evernote"><a href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank" class="fa fa-bookmark"></a></div><div class="weibo"><a href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));" class="fa fa-weibo"></a></div><div class="twitter"><a href="http://twitter.com/home?status=,http://hiyangyue.github.io/2015/11/24/view/,YueYang's Blog,自定义View,;" class="fa fa-twitter"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a role="navigation" href="/2013/07/13/proguard/" title="Android 代码混淆" class="btn">上一篇</a></li><li class="next pagbuttons"><a role="navigation" href="/2015/11/24/sorts/" title="常用排序算法" class="btn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

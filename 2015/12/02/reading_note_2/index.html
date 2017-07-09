@@ -1,0 +1,374 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="YueYang"><title>《Android群英传》读书笔记（二） · YueYang's Blog</title><meta name="description" content="Android读书笔记(二) 第5章Scroll分析 + 第6章Android绘图机制与处理技巧
+1.    Android坐标系 
+ 屏幕最左上角的顶点作为Android坐标系的原点，从这个点向右是X轴正方向，向下是Y轴正方向，
+View提供的获取坐标的方法：
+
+getTop()    ：View"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">YueYang's Blog</a></h3></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a href="https://www.caicai.me"> CaiCai </a><span>&</span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">归档</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"></a></li></div><div class="avatar"><img></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>《Android群英传》读书笔记（二）</a></h3></div><div class="post-content"><p>Android读书笔记(二) 第5章Scroll分析 + 第6章Android绘图机制与处理技巧</p>
+<h3 id="1-Android坐标系"><a href="#1-Android坐标系" class="headerlink" title="1.    Android坐标系"></a>1.    Android坐标系</h3><p> <img src="/images/location_on_screen.jpg" alt=""></p>
+<p> 屏幕最左上角的顶点作为Android坐标系的原点，从这个点向右是X轴正方向，向下是Y轴正方向，</p>
+<p>View提供的获取坐标的方法：</p>
+<ul>
+<li>getTop()    ：View本身顶边到达父布局顶边的距离</li>
+<li>getLeft()   :View本身左边到达父布局左边的距离</li>
+<li>getRight()  :View本身右边到达父布局右边的距离</li>
+<li><p>getBottom() : View本身底部到达父布局底部的距离</p>
+<p>MotionEvent提供的方法：</p>
+</li>
+<li>getX() ： 获取点击事件距离控件左边的距离(视图坐标)</li>
+<li>getY() :  获取点击事件距离控件右边的距离</li>
+<li>getRawX() : 获取点击事件距离屏幕左边的距离(绝对坐标)</li>
+<li>getRawY() : 获取点击事件距离屏幕右边的距离</li>
+</ul>
+<p>(可以这么理解getX(),getY()是当前View的距离，getRawX(),getRawY()是整个View的距离)</p>
+<a id="more"></a>
+<ol>
+<li>滑动的实现原理</li>
+</ol>
+<p>当触控View时，记下当前View的左边，当手指滑动时，记下滑动之后的位置的坐标，通过两个点之间的距离计算出偏移量，再通过偏移量来修改View的坐标，不断重复这样的步骤，从而实现View滑动过程。</p>
+<h6 id="使用layout-方法"><a href="#使用layout-方法" class="headerlink" title="使用layout()方法"></a>使用layout()方法</h6><p>绝对坐标如下：</p>
+<pre><code>
+@Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        //获取绝对坐标
+        int rawX = (int)event.getRawX();
+        int rawY = (int)event.getRawY();
+
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                //当触控View的时候，记录当前触控的坐标
+                lastX = rawX;
+                lastY = rawY;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //计算偏移量
+                int offsetX = rawX - lastX;
+                int offsetY = rawY - lastY;
+                //在原坐标的基础上加上偏移量
+                view.layout(
+                        view.getLeft() + offsetX,
+                        view.getTop() + offsetY,
+                        view.getRight() + offsetX,
+                        view.getBottom() + offsetY
+                );
+
+                //更新初始坐标
+                lastX = rawX;
+                lastY = rawY;
+
+                break;
+        }
+
+        return true;
+    }
+</code></pre>
+
+
+<p>Android帮我们封装好了左右，上下移动的API，只要计算好偏移量，效果和使用Layout一样。</p>
+<pre><code>
+view.offsetLeftAndRight(offsetX);
+view.offsetTopAndBottom(offsetY);
+</code></pre>
+
+
+<h6 id="使用LayoutParams"><a href="#使用LayoutParams" class="headerlink" title="使用LayoutParams"></a>使用LayoutParams</h6><p>LayoutParams保存了View的参数，所以使用LayoutParams也能动态的修改位置参数。</p>
+<pre><code>
+@Override
+   public boolean onTouchEvent(MotionEvent event) {
+       int x = (int) event.getX();
+       int y = (int) event.getY();
+
+       switch (event.getAction()){
+           case MotionEvent.ACTION_DOWN:
+               //当触控View时，计算当前的坐标
+               lastX = (int) event.getX();
+               lastY = (int) event.getY();
+               break;
+           case MotionEvent.ACTION_MOVE:
+               //计算出偏移量
+               int offsetX = x - lastX;
+               int offsetY = y - lastY;
+
+               //获取当前的LayoutParams
+               LinearLayout.LayoutParams layoutParams =
+                       (LinearLayout.LayoutParams) view.getLayoutParams();
+               layoutParams.leftMargin = view.getLeft() + offsetX;
+               layoutParams.topMargin = view.getTop() + offsetY;
+               //更新layoutParams
+               view.setLayoutParams(layoutParams);
+
+               break;
+       }
+
+       return true;
+   }
+
+</code></pre>
+
+
+<ol>
+<li>ScrollTo &amp;&amp; ScrollBy</li>
+</ol>
+<p>ScrollTo，ScrollBy移动的是<em>当前View的内容</em>，所以想要移动当前的View，代码如下：</p>
+<pre><code>
+((View)getParent()).scrollBy(offsetX,offsetY);
+</code></pre>
+
+
+<p>在使用这种方法移动View的时候，偏移量要设置为负值，可以理解为 移动的是父View的相对位置，子View本身并不移动。</p>
+<p>而他们的区别在于：ScrollTo是移动到一个坐标点，ScrollBy表示的则是移动的增量dX,dY。</p>
+<h3 id="4-Scroller-平滑移动"><a href="#4-Scroller-平滑移动" class="headerlink" title="4.  Scroller(平滑移动)"></a>4.  Scroller(平滑移动)</h3><p>不管是ScrollTo方法还是ScrollBy方法，它们平移的过程是瞬间发生的，有的时候，瞬移会让用户觉得很突兀，应该有一些自然的过度的动画来完成平移的效果。</p>
+<h5 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h5><p>瞬间移动的原理是某个点直接移动到某个点，而平滑移动这是将这两点的距离划分成N个非常小的偏移量，在用于ScrollBy(),顺序移动其中相邻的两个点，这样在视觉上就造成了平移的效果。</p>
+<p>实现步骤：</p>
+<ul>
+<li>初始化Scroller</li>
+<li>重写computeScroll()方法，实现模拟滑动</li>
+<li>starctScroll()开启模拟过程</li>
+</ul>
+ <pre><code>
+ public CustomView(Context context) {
+         super(context);
+         initView(context);
+     }
+
+     private void initView(Context context){
+         mScroller = new Scroller(context);
+     }
+
+     @Override
+     public void computeScroll() {
+         super.computeScroll();
+         //判断Scroller是否已经完成了整个滑动
+         if (mScroller.computeScrollOffset()){
+             ((View)getParent()).scrollTo(
+                     mScroller.getCurrX(),
+                     mScroller.getCurrY());
+
+             //通过重绘来不断调用computeScroll
+             invalidate();
+         }
+     }
+
+     @Override
+     public boolean onTouchEvent(MotionEvent event) {
+
+         int x = (int) event.getX();
+         int y = (int) event.getY();
+
+         switch (event.getAction()){
+             case MotionEvent.ACTION_DOWN:
+                 //当触控View的时候，记录当前触控的坐标
+                 lastX = (int)event.getX();
+                 lastY = (int)event.getY();
+                 break;
+             case MotionEvent.ACTION_MOVE:
+
+                 int offsetX = x - lastX;
+                 int offsetY = y - lastY;
+                 ((View)getParent()).scrollBy(-offsetX,-offsetY);
+                 break;
+             case MotionEvent.ACTION_UP:
+                 //手指移开时，执行滑动过程
+                 View viewGroup = ((View) getParent());
+                 mScroller.startScroll(
+                   viewGroup.getScrollX(),
+                   viewGroup.getScrollY(),
+                   -viewGroup.getScrollX(), -viewGroup.getScrollY());
+                 invalidate();
+                 break;
+
+         }
+
+         return true;
+     }
+</code></pre>
+
+
+<p>因为只能在computeScroll()方法里获取模拟过程中的ScrollX和ScrollY坐标<br>，但还是computeScroll()方法不会被自动调用，只能通过invalidate() ———— draw() ————computeScroll() 来间接调用,所以invalidate()方法必不可少。当模拟结束之后，scroller.computeScrollOffset()方法会返回false,从而中断循环，完成整个平移的过程。</p>
+<hr>
+<h2 id="第六章-Android绘图机制与处理技巧"><a href="#第六章-Android绘图机制与处理技巧" class="headerlink" title="第六章 Android绘图机制与处理技巧"></a>第六章 Android绘图机制与处理技巧</h2><ol>
+<li>屏幕尺寸信息</li>
+</ol>
+<p>屏幕参数</p>
+<ul>
+<li>屏幕大小(屏幕对角线长度，寸)</li>
+<li>分辨率(屏幕的像素点)</li>
+<li>PPI(对角线长度/屏幕大小)</li>
+</ul>
+<p>Android定义了几个标准的DPI :<br><img src="/images/android_dpi.png" alt=""></p>
+<p>如图,Android使用mdpi作为屏幕的标准，在这个屏幕上1px = 1dp,在其他屏幕上通过比例来进行换算。</p>
+<p> 系统提过了TypedValue类帮助转换，以下是常用的单位辅助类</p>
+ <pre><code>
+ public class DisplayUtil {
+
+     //dp转px
+     public static int dp2px(Context context, float dpVal) {
+         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                 dpVal, context.getResources().getDisplayMetrics());
+     }
+
+     //sp转px
+     public static int sp2px(Context context, float spVal) {
+         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+                 spVal, context.getResources().getDisplayMetrics());
+     }
+
+     //px转dp
+     public static float px2dp(Context context, float pxVal) {
+         final float scale = context.getResources().getDisplayMetrics().density;
+         return (pxVal / scale);
+     }
+
+     //px转sp
+     public static float px2sp(Context context, float pxVal) {
+         return (pxVal / context.getResources().getDisplayMetrics().scaledDensity);
+     }
+ }
+ </code></pre>
+
+
+<h3 id="2-2D绘图"><a href="#2-2D绘图" class="headerlink" title="2.2D绘图"></a>2.2D绘图</h3><h5 id="Canvas常用对象"><a href="#Canvas常用对象" class="headerlink" title="Canvas常用对象"></a>Canvas常用对象</h5><ul>
+<li>drawPoint(点)</li>
+<li>drawLine(线)</li>
+<li>drawRect(矩形)</li>
+<li>drawVertices(多边形)</li>
+<li>drawArc(弧)</li>
+<li>drawCircle(圆)</li>
+</ul>
+<h5 id="Paint常用方法"><a href="#Paint常用方法" class="headerlink" title="Paint常用方法"></a>Paint常用方法</h5><ul>
+<li>setAntiAlias()   ———— Paint的锯齿效果</li>
+<li>setColor()       ———— Paint的颜色</li>
+<li>setARGB()        ———— Paint的A,R,G,G的值(也是颜色)</li>
+<li>setAlpha()       ———— Paint透明度</li>
+<li>setTextSize()    ———— 字体大小</li>
+<li>setStyle()       ———— 空心(STROKE)/实心(FILL)</li>
+<li>setStrokeWidth() ———— 空心边框的宽度</li>
+</ul>
+<h3 id="3-XML绘图"><a href="#3-XML绘图" class="headerlink" title="3. XML绘图"></a>3. XML绘图</h3><h6 id="Shape"><a href="#Shape" class="headerlink" title="Shape"></a>Shape</h6><p>shape可以自定义四种形状：</p>
+<ul>
+<li>rectangle: 矩形，默认的形状，可以画出直角矩形、圆角矩形、弧形等</li>
+<li>oval: 椭圆形，用得比较多的是画正圆</li>
+<li>line: 线形，可以画实线和虚线</li>
+<li><p>ring: 环形，可以画环形进度条</p>
+<p>Shape常用的属性</p>
+<ul>
+<li>solid  填充的颜色</li>
+<li>padding 内边距</li>
+<li>gradient 渐变</li>
+<li>corners 设置圆角(只在rectangle下有效)</li>
+<li>stroke 描边</li>
+</ul>
+</li>
+</ul>
+<p>代码：</p>
+<pre><code>
+<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
+
+      <!--圆角-->
+      <corners android:radius="2dp">
+
+      <!--内边距-->
+      <padding android:left="5dp" android:right="5dp" android:top="5dp" android:bottom="5dp">
+
+      <!--填充颜色-->
+      <solid android:color="#FFFFFF">
+
+      <!--边框的宽度和颜色-->
+      <stroke android:color="@color/pink" android:width="3dp">
+
+</stroke></solid></padding></corners></shape>
+</code></pre>
+
+
+<h3 id="4-Selector"><a href="#4-Selector" class="headerlink" title="4. Selector"></a>4. Selector</h3><p>Selector实现的是静态绘图中的时间反馈，通过给不同的事件设置不同的图片，从而获得不同的反馈效果。</p>
+<p>常用属性</p>
+<ul>
+<li>android:state_enabled: 设置触摸或点击事件是否可用状态，一般只在false时设置该属性，表示不可用状态</li>
+<li>android:state_pressed:</li>
+<li>android:state_selected:</li>
+<li>android:state_checked: 设置是否勾选状态，主要用于CheckBox和RadioButto</li>
+<li>android:state_checkable: 设置勾选是否可用状态，类似state_enabled，只是state_enabled会影响触摸或点击事件，而state_checkable影响勾选事件</li>
+<li>android:state_focused: 设置是否获得焦点状态，true表示获得焦点，默认为false</li>
+<li>android:state_window_focused: 设置当前窗口是否获得焦点状态，true表示获得焦点，false表示未获得焦点，例如拉下通知栏或弹出对话框时，当前界面就会失去焦点；另外，ListView的ListItem获得焦点时也会触发true状态，可以理解为当前窗口就是ListItem本身</li>
+<li>android:state_activated: 设置是否被激活状态，true表示被激活，false表示未激活</li>
+</ul>
+<p>(不知道为什么带有Selector标签的代码，显示不出来,代码就放Github)</p>
+<h3 id="5-绘图技巧"><a href="#5-绘图技巧" class="headerlink" title="5. 绘图技巧"></a>5. 绘图技巧</h3><p>Canvas主要方法</p>
+<ul>
+<li>save()       ———— 将之前绘制的内容</li>
+<li>restore()    ———— 将save()前后的图层合并</li>
+<li>translate()  ———— 坐标系的平移</li>
+<li>rotate()     ———— 坐标系的翻转</li>
+</ul>
+<h6 id="最佳实践————绘制仪表盘"><a href="#最佳实践————绘制仪表盘" class="headerlink" title="最佳实践————绘制仪表盘"></a>最佳实践————绘制仪表盘</h6><pre><code>
+@Override
+    protected void onDraw(Canvas canvas) {
+
+
+        // 获取宽高参数
+        int mWidth = getMeasuredWidth();
+        int mHeight = getMeasuredHeight();
+        // 画外圆
+        Paint paintCircle = new Paint();
+        paintCircle.setStyle(Paint.Style.STROKE);
+        paintCircle.setAntiAlias(true);
+        paintCircle.setStrokeWidth(5);
+        canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2, paintCircle);
+        // 画刻度
+        Paint painDegree = new Paint();
+        paintCircle.setStrokeWidth(3);
+        for (int i = 0; i < 24; i++) {
+            // 区分整点与非整点
+            if (i == 0 || i == 6 || i == 12 || i == 18) {
+                painDegree.setStrokeWidth(5);
+                painDegree.setTextSize(30);
+                canvas.drawLine(mWidth / 2, mHeight / 2 - mWidth / 2,
+                        mWidth / 2, mHeight / 2 - mWidth / 2 + 60,
+                        painDegree);
+                String degree = String.valueOf(i);
+                canvas.drawText(degree,
+                        mWidth / 2 - painDegree.measureText(degree) / 2,
+                        mHeight / 2 - mWidth / 2 + 90,
+                        painDegree);
+            } else {
+                painDegree.setStrokeWidth(3);
+                painDegree.setTextSize(15);
+                canvas.drawLine(mWidth / 2, mHeight / 2 - mWidth / 2,
+                        mWidth / 2, mHeight / 2 - mWidth / 2 + 30,
+                        painDegree);
+                String degree = String.valueOf(i);
+                canvas.drawText(degree,
+                        mWidth / 2 - painDegree.measureText(degree) / 2,
+                        mHeight / 2 - mWidth / 2 + 60,
+                        painDegree);
+            }
+            // 通过旋转画布简化坐标运算
+            canvas.rotate(15, mWidth / 2, mHeight / 2);
+        }
+        // 画圆心
+        Paint paintPointer = new Paint();
+        paintPointer.setStrokeWidth(30);
+        canvas.drawPoint(mWidth / 2, mHeight / 2, paintPointer);
+        // 画指针
+        Paint paintHour = new Paint();
+        paintHour.setStrokeWidth(20);
+        Paint paintMinute = new Paint();
+        paintMinute.setStrokeWidth(10);
+        canvas.save();
+        canvas.translate(mWidth / 2, mHeight / 2);
+        canvas.drawLine(0, 0, 100, 100, paintHour);
+        canvas.drawLine(0, 0, 100, 200, paintMinute);
+        canvas.restore();
+
+    }
+</code></pre>
+
+<p>最终效果:<br> <img src="/images/dash_broad.png" alt=""></p>
+<p>图像处理这边暂时用的不过，先略过了。 = =</p>
+<hr>
+<p>参考</p>
+<ul>
+<li><a href="http://www.linuxidc.com/Linux/2015-11/125391.htm?utm_source=tuicool&amp;utm_medium=referral" target="_blank" rel="external">Android中的坐标系以及获取坐标的方法</a></li>
+<li><a href="http://keeganlee.me/post/android/20150830" target="_blank" rel="external">Android样式的开发:shape篇</a></li>
+</ul>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2015-12-02</span><i class="fa fa-tag"></i><a href="/categories/Android/" title="Android" class="tag">Android </a><a href="/tags/Android/" title="Android" class="tag">Android </a><a href="/tags/Scroll/" title="Scroll" class="tag">Scroll </a><a href="/tags/UI/" title="UI" class="tag">UI </a></div></div></div></div><div class="share"><div class="evernote"><a href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank" class="fa fa-bookmark"></a></div><div class="weibo"><a href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));" class="fa fa-weibo"></a></div><div class="twitter"><a href="http://twitter.com/home?status=,http://hiyangyue.github.io/2015/12/02/reading_note_2/,YueYang's Blog,《Android群英传》读书笔记（二）,;" class="fa fa-twitter"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a role="navigation" href="/2015/11/30/reading_note_1/" title="《Android群英传》读书笔记（一）" class="btn">上一篇</a></li><li class="next pagbuttons"><a role="navigation" href="/2015/12/03/reading_note_3/" title="《Android群英传》读书笔记（三）" class="btn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

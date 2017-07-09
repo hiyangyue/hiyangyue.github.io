@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="YueYang"><title>《Android群英传》读书笔记（三） · YueYang's Blog</title><meta name="description" content="这篇读书笔记的内容主要是 :  第9章 Activity系统信息与安全机制  + 第10章 Android性能优化
+第8章为Activity生命周期，推荐阅读官方关于Activity生命周期的文档：管理Activity生命周期
+关于第10章中的图片优化，同样推荐官方关于Bitmap展示优化的文档，写"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">YueYang's Blog</a></h3></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a href="https://www.caicai.me"> CaiCai </a><span>&</span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">归档</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"></a></li></div><div class="avatar"><img></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>《Android群英传》读书笔记（三）</a></h3></div><div class="post-content"><p>这篇读书笔记的内容主要是 :  第9章 Activity系统信息与安全机制  + 第10章 Android性能优化</p>
+<p>第8章为Activity生命周期，推荐阅读官方关于Activity生命周期的文档：<a href="http://developer.android.com/intl/zh-cn/training/basics/activity-lifecycle/starting.html" target="_blank" rel="external">管理Activity生命周期</a></p>
+<p>关于第10章中的图片优化，同样推荐官方关于Bitmap展示优化的文档，写的很棒：<a href="http://developer.android.com/intl/zh-cn/training/displaying-bitmaps/index.html" target="_blank" rel="external">Displaying Bitmaps Efficiently</a><br> <a id="more"></a></p>
+<h3 id="1-获取系统信息"><a href="#1-获取系统信息" class="headerlink" title="1.  获取系统信息"></a>1.  获取系统信息</h3><p>android.OS.Build 和 SystemProperty</p>
+<pre><code>
+
+String board = Build.BOARD;
+String brand = Build.BRAND;
+String supported_abis = Build.SUPPORTED_ABIS[0];
+String device = Build.DEVICE;
+String display = Build.DISPLAY;
+String fingerprint = Build.FINGERPRINT;
+String serial = Build.SERIAL;
+String id = Build.ID;
+String manufacturer = Build.MANUFACTURER;
+String model = Build.MODEL;
+String hardware = Build.HARDWARE;
+String product = Build.PRODUCT;
+String tags = Build.TAGS;
+String type = Build.TYPE;
+String codename = Build.VERSION.CODENAME;
+String incremental = Build.VERSION.INCREMENTAL;
+String release = Build.VERSION.RELEASE;
+String sdk_int = "" + Build.VERSION.SDK_INT;
+String host = Build.HOST;
+String user = Build.USER;
+String time = "" + Build.TIME;
+
+String os_version = System.getProperty("os.version");
+String os_name = System.getProperty("os.name");
+String os_arch = System.getProperty("os.arch");
+String user_home = System.getProperty("user.home");
+String user_name = System.getProperty("user.name");
+String user_dir = System.getProperty("user.dir");
+String user_timezone = System.getProperty("user.timezone");
+String path_separator = System.getProperty("path.separator");
+String line_separator = System.getProperty("line.separator");
+String file_separator = System.getProperty("file.separator");
+String java_vendor_url = System.getProperty("java.vendor.url");
+String java_class_path = System.getProperty("java.class.path");
+String java_class_version = System.getProperty("java.class.version");
+String java_vendor = System.getProperty("java.vendor");
+String java_version = System.getProperty("java.version");
+String java_home = System.getProperty("java_home");
+
+</code></pre>
+
+<h3 id="2-Apk应用信息获取"><a href="#2-Apk应用信息获取" class="headerlink" title="2.  Apk应用信息获取"></a>2.  Apk应用信息获取</h3><h6 id="PackManager"><a href="#PackManager" class="headerlink" title="PackManager"></a>PackManager</h6><ul>
+<li>ActivityInfo</li>
+</ul>
+<p>Mainfest文件中的<activity></activity>和<recevier></recevier>之间的信息</p>
+<ul>
+<li>ServiceInfo</li>
+</ul>
+<p>和ActivityInfo类似，封装的是<service></service>之间的所有信息</p>
+<ul>
+<li>ApplicationInfo</li>
+</ul>
+<p>同上,ApplicationInfo包含很多Flag,比如FLAG_SYSTEM表示系统应用，FLAG_EXTERNAL_STORAGE表示的是SDCard上的应用，这些Flag方便我们判断APP的类型</p>
+<ul>
+<li>ResolveInfo</li>
+</ul>
+<p>ResolveInfo比较特殊，它能够返回ActivityInfo,ServiceInfo,ServiceInfo等包含的<intent>的信息，用来帮助我们找到那些包含特定Intent条件的信息，比如分享、播放功能的APP。</intent></p>
+<p>PackageManager常用的方法：</p>
+<ul>
+<li>getPackageManger</li>
+<li>getApplicationInfo</li>
+<li>getApplicationIcon</li>
+<li>getInstalledApplications</li>
+<li>getInstalledPackages</li>
+<li>queryIntentActivities</li>
+<li>queryIntentServices</li>
+<li>resolveActivity</li>
+<li>resolveService</li>
+</ul>
+<h5 id="ActivityManager"><a href="#ActivityManager" class="headerlink" title="ActivityManager"></a>ActivityManager</h5><p>PackageManager侧重的是 获取应用的包信息，而ActivityManager侧重的是 获取运行的应用程序的信息。</p>
+<p>ActivityManager常用的对象：</p>
+<ul>
+<li>ActivityManager.MemoryInfo</li>
+</ul>
+<p>关于系统内存的信息，例如availMem(系统可用内存)、totalMem(总内存)等</p>
+<ul>
+<li>Debug.MemoryInfo</li>
+</ul>
+<p>该MemoryInfo主要用于统计进程下的内存信息</p>
+<ul>
+<li>RunningAppProceeInfo</li>
+</ul>
+<p>运行进程的信息，存储的是与进程相关的信息，例如processName、pid、uid等；</p>
+<ul>
+<li>RunningServiceInfo</li>
+</ul>
+<p>运行服务的信息，存储的是服务进程的信息，例如activeSince(第一次被激活时间)等</p>
+<h5 id="Packages-xml"><a href="#Packages-xml" class="headerlink" title="Packages.xml"></a>Packages.xml</h5><p>在系统初始化的时候，PackageManager的底层实现类PackageManagerService会去扫描系统中的一些特定的目录，并解析其中的apk文件，最后把它获得的应用信息保存到packages.xml文件中，当系统中的应用安装、删除或者升级时，它也会被更新。</p>
+<h3 id="3-Apk反编译"><a href="#3-Apk反编译" class="headerlink" title="3.  Apk反编译"></a>3.  Apk反编译</h3><p><a href="http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2015/0416/2732.html" target="_blank" rel="external">Apk反编译详解</a></p>
+<h3 id="第10章-性能优化"><a href="#第10章-性能优化" class="headerlink" title="第10章  性能优化"></a>第10章  性能优化</h3><h5 id="1-Android-UI渲染机制"><a href="#1-Android-UI渲染机制" class="headerlink" title="1.  Android UI渲染机制"></a>1.  Android UI渲染机制</h5><ul>
+<li><p>人眼所感觉的流畅画面，在40fps ~ 60fps /s，最佳fps是<strong>60fps</strong>左右，那么差不多每16ms系统就要对UI进行渲染和重绘。</p>
+</li>
+<li><p>系统提供了检测UI渲染时间的工具:开发者选项 ——  Profile GPU rendering ——— On screen as bars”</p>
+</li>
+</ul>
+<p><img src="/images/location_on_screen.jpg" alt=""></p>
+<p> 开启之后，屏幕上将显示一些条形图，每条柱状线都包含三部分，蓝色代表测量绘制Display List的时间，红色代表OpenGL渲染Display List所需要的时间，黄色代表CPU等待GPU处理的时间。中间的绿色横线代表VSYNC时间16ms，需要尽量将所有条形图都控制在这条绿线之下。</p>
+<ul>
+<li>避免过度绘制(Overdraw)</li>
+</ul>
+<p><img src="/images/overdraw.png" alt=""></p>
+<ul>
+<li>没有颜色</li>
+</ul>
+<p>意味着没有overdraw。像素只画了一次。</p>
+<ul>
+<li>蓝色</li>
+</ul>
+<p>意味着overdraw</p>
+<ul>
+<li>1倍</li>
+</ul>
+<p>像素绘制了两次。大片的蓝色还是可以接受的（若整个窗口是蓝色的，可以摆脱一层）。</p>
+<ul>
+<li>绿色</li>
+</ul>
+<p>意味着overdraw</p>
+<ul>
+<li>2倍</li>
+</ul>
+<p>像素绘制了三次。中等大小的绿色区域是可以接受的但你应该尝试优化、减少它们。</p>
+<ul>
+<li>浅红</li>
+</ul>
+<p>意味着overdraw 3倍。像素绘制了四次，小范围可以接受。</p>
+<ul>
+<li>暗红</li>
+</ul>
+<p>意味着overdraw 4倍。像素绘制了五次或者更多。这是错误的，要修复它们。</p>
+<h5 id="布局优化"><a href="#布局优化" class="headerlink" title="布局优化"></a>布局优化</h5><ul>
+<li>优化布局层级，Google在文档中建议View树的高度不宜超过10层</li>
+<li>避免嵌套过多无用布局：</li>
+<li>使用标签重用layout</li>
+</ul>
+<p>如果需要在标签中覆盖类似原布局中的android:layout_xxx的属性，就必须在标签中同时指定android:layout_width和android:layout_height属性。</p>
+<ul>
+<li>使用实现view的延迟加载</li>
+</ul>
+<p>ViewStub是一个非常轻量级的组件，它不仅不可见，而且大小为0。</p>
+<ul>
+<li><strong>ViewStub和View.GONE有啥区别？</strong></li>
+</ul>
+<p>它们的共同点是初始时都不会显示，但是前者只会在显示时才去渲染整个布局，而后者在初始化布局树的时候就已经添加到布局树上了，相比之下前者的布局具有更高的效率。</p>
+<h5 id="内存优化"><a href="#内存优化" class="headerlink" title="内存优化"></a>内存优化</h5><p>通常情况下我们所说的内存是指手机的RAM，它包括以下几部分：</p>
+<p>(1) 寄存器：寄存器处于CPU内部，在程序中无法控制</p>
+<p>(2)栈：存放基本数据类型和对象的引用</p>
+<p>(3)堆：存放对象和数组，有虚拟机GC来管理</p>
+<p>(4)静态存储区域(static field)：在固定的位置存放应用程序运行时一直存在的数据，Java在内存中专门划分了一个静态存储区域来管理一些特殊的数据变量，如静态的数据变量</p>
+<p>(5)常量池(constant pool)：虚拟机必须为每个被装在的类维护一个常量池，常量池就是这个类所用的常量的一个有序集合，包括直接常量（基本类型、string）和对其他类型、字段和方法的符号引用。</p>
+<h5 id="代码优化"><a href="#代码优化" class="headerlink" title="代码优化"></a>代码优化</h5><ul>
+<li>使用静态方法，它比普通方法会提高15%左右的访问速度</li>
+<li>尽量不要使用枚举，少用迭代器</li>
+<li>对Cursor、Receiver、Sensor、File等对象，要非常注意对它们的创建、回收与注册、解注册</li>
+<li>使用SurfaceView来替代view进行大量的、频繁的绘图操作；</li>
+<li>尽量使用视图缓存，而不是每次都执行inflate方法解析视图。</li>
+</ul>
+<hr>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2015-12-03</span><i class="fa fa-tag"></i><a href="/categories/Android/" title="Android" class="tag">Android </a><a href="/tags/Activity/" title="Activity" class="tag">Activity </a><a href="/tags/Performance-Optimization/" title="Performance Optimization" class="tag">Performance Optimization </a><a href="/tags/Android/" title="Android" class="tag">Android </a></div></div></div></div><div class="share"><div class="evernote"><a href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank" class="fa fa-bookmark"></a></div><div class="weibo"><a href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));" class="fa fa-weibo"></a></div><div class="twitter"><a href="http://twitter.com/home?status=,http://hiyangyue.github.io/2015/12/03/reading_note_3/,YueYang's Blog,《Android群英传》读书笔记（三）,;" class="fa fa-twitter"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a role="navigation" href="/2015/12/02/reading_note_2/" title="《Android群英传》读书笔记（二）" class="btn">上一篇</a></li><li class="next pagbuttons"><a role="navigation" href="/2015/12/06/art_of_android_1/" title="《Android开发艺术》读书笔记（一）" class="btn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="YueYang"><title>《Android开发艺术》读书笔记（三） · YueYang's Blog</title><meta name="description" content="3.1 View基础知识 (1)  View是一种界面层控件的抽象，是所有控件的基类，ViewGroup是一组View .
+ (2) View的位置参数 控件相对于父容器的坐标：top,left,right,bottom;点击事件距离距离控件的距离 x,y;点击事件距离整个屏幕的距离 getRawX"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">YueYang's Blog</a></h3></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a href="https://www.caicai.me"> CaiCai </a><span>&</span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">归档</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"></a></li></div><div class="avatar"><img></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>《Android开发艺术》读书笔记（三）</a></h3></div><div class="post-content"><h3 id="3-1-View基础知识"><a href="#3-1-View基础知识" class="headerlink" title="3.1 View基础知识"></a>3.1 View基础知识</h3><p> (1)  View是一种界面层控件的抽象，是所有控件的基类，ViewGroup是一组View .</p>
+<p> (2) View的位置参数<br> 控件相对于父容器的坐标：top,left,right,bottom;点击事件距离距离控件的距离 x,y;点击事件距离整个屏幕的距离 getRawX(),getRawY();偏移量translationX,translationY .</p>
+<p> (3) MotionEvent :手指在接触屏幕之后产生的一系列的事件，主要有: ACTION_DOWN , ACTION_MOVE , ACTION_UP。正常情况下，一次触屏会触发一系列的点击事件，有两种典型情况</p>
+<ol>
+<li>点击屏幕之后，事件序列为 DOWN -&gt; UP</li>
+<li><p>点击屏幕之后滑动松开 事件序列为 : DOWN -&gt; MOVE -&gt; …… -&gt; MOVE -&gt; UP</p>
+<a id="more"></a>
+</li>
+</ol>
+<p>(4) TouchSlop : 系统所能识别的被认为滑动的最小距离 ,获取方式 ：</p>
+<blockquote>
+<p>ViewConfiguration.get(getContext()).getScaledTouchSlop();</p>
+</blockquote>
+<p>(5) GestureDetector : 用于辅助检测用户单击、滑动、长按、双击的行为。(<strong>如果只是监听滑动相关的事件，在onTouchEvent中完成，如果监听双击这种行为，则使用GestureDetector</strong> )</p>
+<p>(6) Scroller : 参见 <a href="http://hiyangyue.github.io/2015/12/02/reading_note_2/">《Android群英传》</a></p>
+<hr>
+<h3 id="3-2-View的滑动"><a href="#3-2-View的滑动" class="headerlink" title="3.2 View的滑动"></a>3.2 View的滑动</h3><p>常见的滑动的方式 :</p>
+<ol>
+<li>SrollTo / ScrollBy , 但是移动的只是 <strong>View的内容</strong></li>
+<li>动画 , <strong>对View影像的操作，动画结束之后并不会改变View原本的位置，如果希望动画之后的状态得以保存，则需要将fillAfter属性设置为true</strong></li>
+<li>改变View的LayoutParams使得Veiw重新布局，<strong>操作复杂</strong></li>
+</ol>
+<h3 id="3-3-弹性滑动"><a href="#3-3-弹性滑动" class="headerlink" title="3.3 弹性滑动"></a>3.3 弹性滑动</h3><p>常见的弹性滑动的两种方式 ：</p>
+<ul>
+<li><p>使用Scroller</p>
+<p>Scroller的工作原理：Scroller本身并不能实现view的滑动，它需要配合view的computeScroll方法才能完成弹性滑动的效果，它不断地让view重绘，而每一次重绘距滑动起始时间会有一个时间间隔，通过这个时间间隔Scroller就可以得出view的当前的滑动位置，知道了滑动位置就可以通过scrollTo方法来完成view的滑动。就这样，view的每一次重绘都会导致view进行小幅度的滑动，而多次的小幅度滑动就组成了弹性滑动，这就是Scroller的工作原理。</p>
+</li>
+<li><p>延时策略</p>
+<p>使用延时策略来实现弹性滑动，它的核心思想是通过发送一系列延时消息从而达到一种渐进式的效果，具体来说可以使用Handler<br>的sendEmptyMessageDelayed(xxx)或view的postDelayed方法，也可以使用线程的sleep方法。</p>
+</li>
+</ul>
+<h3 id="3-4-View的事件分发"><a href="#3-4-View的事件分发" class="headerlink" title="3.4 View的事件分发"></a>3.4 View的事件分发</h3><p>(1) 事件分发的三个方法</p>
+<pre><code>public boolean dispatchTouchEvent(MotionEvent ev)
+</code></pre><p>用来进行事件的分发。如果事件能够传递给当前view，那么此方法一定会被调用，返回结果受当前view的onTouchEvent和下级view的dispatchTouchEvent方法的影响，表示是否消耗当前事件。</p>
+<pre><code>public boolean onInterceptTouchEvent(MotionEvent event)
+</code></pre><p>在dispatchTouchEvent方法内部调用，用来判断是否拦截某个事件，如果当前view拦截了某个事件，那么在同一个事件序列当中，此方法不会再被调用，返回结果表示是否拦截当前事件。<br>若返回值为True事件会传递到自己的onTouchEvent()；<br>若返回值为False传递到子view的dispatchTouchEvent()。</p>
+<pre><code>public boolean onTouchEvent(MotionEvent event)
+</code></pre><p>在dispatchTouchEvent方法内部调用，用来处理点击事件，返回结果表示是否消耗当前事件，如果不消耗，则在同一个事件序列中，当前view无法再次接收到事件。<br>若返回值为True，事件由自己处理，后续事件序列让其处理；<br>若返回值为False，自己不消耗事件，向上返回让其他的父容器的onTouchEvent接受处理。</p>
+<p>(2) 优先级 onTouch &gt; onTouchEvent &gt; onClick</p>
+<p>当View需要处理事件时，如果它设置了OnTouchListener ，那么它的onTouch方法将会被调用，如果onTouch的返回值为false,则当前View的onTouchEvent方法将会被调用，如果返回为true,那么onTouchEvent将不会被调用。</p>
+<p>(3) 当一个事件发生之后，传递顺序 : Activity -&gt; Windows -&gt; View</p>
+<p>(4) 正常情况下， <strong>一个事件序列只能被一个View拦截</strong> ，一旦一个元素拦截了某个事件，那么同一个事件序列内的所有事情都会交个它处理</p>
+<p>(5) 某个view一旦开始处理事件，如果它不消耗ACTION_DOWN事件，那么同一事件序列的其他事件都不会再交给它来处理，并且事件将重新交给它的父容器去处理(调用父容器的onTouchEvent方法)；如果它消耗ACTION_DOWN事件，但是不消耗其他类型事件，那么这个点击事件会消失，父容器的onTouchEvent方法不会被调用，当前view依然可以收到后续的事件，但是这些事件最后都会传递给Activity处理。</p>
+<p>(6) View的onTouchEvent默认都会消耗事件(返回true)，除非它是不可点击的(clickable和longClickable都为false)。</p>
+<p>(7) View的enable属性不影响onTouchEvent的默认返回值。</p>
+<p>(8) 事件传递过程总是先传递给父元素，然后再由父元素分发给子view，通过requestDisallowInterceptTouchEvent方法可以在子元素中干预父元素的事件分发过程，但是ACTION_DOWN事件除外，即当面对ACTION_DOWN事件时，ViewGroup总是会调用自己的onInterceptTouchEvent方法来询问自己是否要拦截事件。</p>
+<h3 id="3-5-滑动冲突场景"><a href="#3-5-滑动冲突场景" class="headerlink" title="3.5 滑动冲突场景"></a>3.5 滑动冲突场景</h3><p>常见的滑动冲突场景</p>
+<ol>
+<li>外部、内部滑动的方向不一致 , 比如ViewPager包含ListView</li>
+<li>外部、内部滑动方向一致，是滑动A还是滑动B</li>
+<li>上面两种情况的嵌套，比如ViewPager中既包含了ViewPager,也包含ListView</li>
+</ol>
+<p>常见的处理冲突的解决方式：</p>
+<ol>
+<li>外部拦截法 : 点击事件都先经过父容器的拦截处理，如果父容器需要此事件就拦截，如果不需要就不拦截。该方法需要重写父容器的onInterceptTouchEvent方法</li>
+<li>内部拦截法：父容器不拦截任何事件，所有的事件都传递给子元素，如果子元素需要此事件就直接消耗掉，否则就交给父容器来处理。这种方法和Android中的事件分发机制不一致，需要配合requestDisallowInterceptTouchEvent方法才能正常工作。</li>
+</ol>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2016-03-14</span><i class="fa fa-tag"></i><a href="/categories/Android/" title="Android" class="tag">Android </a><a href="/tags/Android/" title="Android" class="tag">Android </a><a href="/tags/View/" title="View" class="tag">View </a><a href="/tags/事件分发/" title="事件分发" class="tag">事件分发 </a></div></div></div></div><div class="share"><div class="evernote"><a href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank" class="fa fa-bookmark"></a></div><div class="weibo"><a href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));" class="fa fa-weibo"></a></div><div class="twitter"><a href="http://twitter.com/home?status=,http://hiyangyue.github.io/2016/03/14/art_of_android_2/,YueYang's Blog,《Android开发艺术》读书笔记（三）,;" class="fa fa-twitter"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a role="navigation" href="/2016/01/26/utils/" title="常用工具类整理" class="btn">上一篇</a></li><li class="next pagbuttons"><a role="navigation" href="/2016/03/17/art_of_android_4/" title="Android开发艺术(四) View的工作原理" class="btn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="YueYang"><title>Android 代码混淆 · YueYang's Blog</title><meta name="description" content="最近公司用到混淆，我总结了一下用法反编译的教程参考这里
+在build.gradle中的配置android {
+  buildTypes {
+  release {
+     runProguard true
+     proguardFiles getDefaultProguardFile(&amp;apo"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">YueYang's Blog</a></h3></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a href="https://www.caicai.me"> CaiCai </a><span>&</span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">归档</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"></a></li></div><div class="avatar"><img></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>Android 代码混淆</a></h3></div><div class="post-content"><p>最近公司用到混淆，我总结了一下用法<a href="http://blog.csdn.net/p106786860/article/details/11974863" target="_blank" rel="external">反编译的教程参考这里</a></p>
+<h5 id="在build-gradle中的配置"><a href="#在build-gradle中的配置" class="headerlink" title="在build.gradle中的配置"></a>在build.gradle中的配置</h5><pre><code>android {
+  buildTypes {
+  release {
+     runProguard true
+     proguardFiles getDefaultProguardFile(&apos;proguard-android.txt&apos;)，&apos;some-other-rules.txt&apos;
+   }
+ }
+}
+</code></pre><h5 id="ProGuard是什么"><a href="#ProGuard是什么" class="headerlink" title="ProGuard是什么"></a>ProGuard是什么</h5><p> ProGuard是一个免费Java类文件收缩，优化，混淆和预校验器。它可以检测并删除未使用的类，字段，方法和属性。它可以优化字节码，并删除未使用的指令。它可以将类、字段和方法使用短无意义的名称进行重命名。</p>
+ <a id="more"></a>
+<h5 id="哪些东西不需要混淆"><a href="#哪些东西不需要混淆" class="headerlink" title="哪些东西不需要混淆"></a>哪些东西不需要混淆</h5><ul>
+<li>反射用到的类</li>
+<li>Android中Manifest中配置的类(Activity、Service等的子类及Framework类默认不进行混淆)</li>
+<li>Jni中调用的类</li>
+<li>用到的第三方的jar包</li>
+<li>表示保留本地的bean文件下的实体类</li>
+<li>特别处理js与本地原生组件之间的调用过程</li>
+<li>自定义不混淆的类</li>
+</ul>
+<h5 id="ProGuard语法"><a href="#ProGuard语法" class="headerlink" title="ProGuard语法"></a>ProGuard语法</h5><ul>
+<li>include {filename}    从给定的文件中读取配置参数</li>
+<li>basedirectory {directoryname}    指定基础目录为以后相对的档案名称</li>
+<li>injars {class_path}    指定要处理的应用程序jar,war,ear和目录   </li>
+<li>outjars {class_path}    指定处理完后要输出的jar,war,ear和目录的名称   </li>
+<li>libraryjars {classpath}    指定要处理的应用程序jar,war,ear和目录所需要的程序库文件   </li>
+<li>dontskipnonpubliclibraryclasses    指定不去忽略非公共的库类。   </li>
+<li>dontskipnonpubliclibraryclassmembers    指定不去忽略包可见的库类的成员。</li>
+</ul>
+<h5 id="保留选项"><a href="#保留选项" class="headerlink" title="保留选项"></a>保留选项</h5><ul>
+<li>keep {Modifier} {class_specification}    保护指定的类文件和类的成员   </li>
+<li>keepclassmembers {modifier} {class_specification}    保护指定类的成员，如果此类受到保护他们会保护的更好  </li>
+<li>keepclasseswithmembers {class_specification}    保护指定的类和类的成员，但条件是所有指定的类和类成员是要存在。   </li>
+<li>keepnames {class_specification}    保护指定的类和类的成员的名称（如果他们不会压缩步骤中删除）   </li>
+<li>keepclassmembernames {class_specification}    保护指定的类的成员的名称（如果他们不会压缩步骤中删除）   </li>
+<li>keepclasseswithmembernames {class_specification}    保护指定的类和类的成员的名称，如果所有指定的类成员出席（在压缩步骤之后）   </li>
+<li>printseeds {filename}    列出类和类的成员-keep选项的清单，标准输出到给定的文件  </li>
+</ul>
+<h5 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h5><p>(一般第三方包的主页会有关于该项目的混淆规范，如果不确定的话。)</p>
+<pre><code>#指定压缩级别
+-optimizationpasses 5
+#使用大小写混合
+-dontusemixedcaseclassnames
+#混淆第三方jar
+-dontskipnonpubliclibraryclasses
+#混淆时预验
+-dontpreverify
+#混淆记录日志
+-verbose
+#混淆时采用的代码
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+
+#support-v4
+-keep class android.support.v4.** { *; }
+-keep public class * extends android.support.v4.**
+
+#四大组件,Fragment
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+-keep public class * extends android.app.Fragment
+
+#因为FastJson使用了序列化，所以不能混淆序列化接口
+-keep public class * implements java.io.Serializable {
+public *;
+}
+
+#Serializable,enum
+-keepclassmembers class * implements java.io.Serializable {
+static final long serialVersionUID;
+private static final java.io.ObjectStreamField[] serialPersistentFields;
+private void writeObject(java.io.ObjectOutputStream);
+private void readObject(java.io.ObjectInputStream);
+java.lang.Object writeReplace();
+java.lang.Object readResolve();
+}
+
+# Parcelable
+-keep class * implements android.os.Parcelable {
+  public static final android.os.Parcelable$Creator *;
+}
+
+## FastJson
+#-dontwarn android.support.**
+#-dontwarn com.alibaba.fastjson.**
+#-dontskipnonpubliclibraryclassmembers
+#-dontskipnonpubliclibraryclasses
+#
+#-libraryjars libs/fastjson.jar
+#-keep class com.alibaba.fastjson.** { *; }
+
+#资源类
+-keepclassmembers class **.R$* {
+public static &lt;fields&gt;;
+}
+
+#保持注解，及使用注解的Activity不被混淆
+-keep class * extends java.lang.annotation.Annotation {*;}
+-keep class com.otb.designerassist.activity.** {*;}
+
+###混淆FastJson
+-dontwarn com.alibaba.fastjson.**
+-keep class com.alibaba.fastjson.** {*;}
+
+# EventBus
+-keepclassmembers class ** {
+public void onEvent*(**);
+}
+
+# 自定义组件
+-keep public class * extends android.view.View {
+public &lt;init&gt;(android.content.Context);
+public &lt;init&gt;(android.content.Context, android.util.AttributeSet);
+public &lt;init&gt;(android.content.Context, android.util.AttributeSet, int);
+public void set*(...);
+}
+
+# native 方法
+-keepclasseswithmembernames class * {
+native &lt;methods&gt;;
+}
+
+# realm
+-keep class io.realm.annotations.RealmModule
+-keep @io.realm.annotations.RealmModule class *
+-keep class io.realm.internal.Keep
+-keep @io.realm.internal.Keep class * { *; }
+-dontwarn javax.**
+-dontwarn io.realm.**
+
+# 友盟
+-dontshrink
+-dontoptimize
+-dontwarn com.google.android.maps.**
+-dontwarn android.webkit.WebView
+-dontwarn com.umeng.**
+-dontwarn com.tencent.weibo.sdk.**
+-dontwarn com.facebook.**
+
+-keep enum com.facebook.**
+-keepattributes Exceptions,InnerClasses,Signature
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+
+-keep public interface com.facebook.**
+-keep public interface com.tencent.**
+-keep public interface com.umeng.socialize.**
+-keep public interface com.umeng.socialize.sensor.**
+-keep public interface com.umeng.scrshot.**
+
+-keep public class com.umeng.socialize.* {*;}
+-keep public class javax.**
+-keep public class android.webkit.**
+
+-keep class com.facebook.**
+-keep class com.umeng.scrshot.**
+-keep public class com.tencent.** {*;}
+-keep class com.umeng.socialize.sensor.**
+
+-keep class com.tencent.mm.sdk.modelmsg.WXMediaMessage {*;}
+
+-keep class com.tencent.mm.sdk.modelmsg.** implements com.tencent.mm.sdk.modelmsg.WXMediaMessage$IMediaObject {*;}
+
+-keep class im.yixin.sdk.api.YXMessage {*;}
+-keep class im.yixin.sdk.api.** implements im.yixin.sdk.api.YXMessage$YXMessageData{*;}
+
+-keep public class [your_pkg].R$*{
+public static final int *;
+}
+
+-keep class com.zhelectronic.gchcz.networkpacket
+-keep class com.zhelectronic.gchcz.data
+</code></pre><p>参考 :</p>
+<ul>
+<li><a href="http://blog.csdn.net/fengyuzhengfan/article/details/43876197" target="_blank" rel="external">Android代码混淆之混淆规则</a></li>
+<li><a href="http://blog.csdn.net/p106786860/article/details/11974863" target="_blank" rel="external">日积月累：Proguard进行源代码混淆和崩溃日志反混淆</a></li>
+<li><a href="http://ticktick.blog.51cto.com/823160/1413066" target="_blank" rel="external">Android开发实践：利用ProGuard进行代码混淆</a></li>
+<li><a href="http://proguard.sourceforge.net/" target="_blank" rel="external">sourceforge</a></li>
+<li><a href="http://developer.android.com/tools/help/proguard.html" target="_blank" rel="external">developer.android.com</a></li>
+</ul>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2013-07-13</span><i class="fa fa-tag"></i><a href="/categories/Android/" title="Android" class="tag">Android </a><a href="/tags/Android/" title="Android" class="tag">Android </a><a href="/tags/Proguard/" title="Proguard" class="tag">Proguard </a></div></div></div></div><div class="share"><div class="evernote"><a href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank" class="fa fa-bookmark"></a></div><div class="weibo"><a href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));" class="fa fa-weibo"></a></div><div class="twitter"><a href="http://twitter.com/home?status=,http://hiyangyue.github.io/2013/07/13/proguard/,YueYang's Blog,Android 代码混淆,;" class="fa fa-twitter"></a></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a role="navigation" href="/2015/11/24/view/" title="自定义View" class="btn">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

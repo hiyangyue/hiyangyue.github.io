@@ -1,0 +1,1899 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>YueYang&#39;s Blog</title>
+  <subtitle>Android Developer</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://hiyangyue.github.io/"/>
+  <updated>2017-07-07T09:50:26.000Z</updated>
+  <id>http://hiyangyue.github.io/</id>
+  
+  <author>
+    <name>YueYang</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>LinkedList原理实现</title>
+    <link href="http://hiyangyue.github.io/2016/12/21/link_list/"/>
+    <id>http://hiyangyue.github.io/2016/12/21/link_list/</id>
+    <published>2016-12-21T14:49:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h5 id="链表的特点"><a href="#链表的特点" class="headerlink" title="链表的特点"></a>链表的特点</h5><h5 id="LinkedList的特点"><a href="#LinkedList的特点" class="headerlink" title="LinkedList的特点"></a>LinkedList的特点</h5><ul>
+<li>双向循环列表</li>
+<li>实现了List接口，能对队列操作</li>
+<li>实现了Cloneable接口，能被克隆</li>
+<li>实现了Serializable，能被序列化</li>
+</ul>
+<p>LinkedList基于链表实现，所以插入、删除的效率比ArrayList更加高效。</p>
+<h5 id="基本的数据结构"><a href="#基本的数据结构" class="headerlink" title="基本的数据结构"></a>基本的数据结构</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">// 链表含有节点的个数</div><div class="line">transient int size = 0;</div><div class="line">// 指向链表的首节点</div><div class="line">transient Node&lt;E&gt; first;</div><div class="line">// 指向链表的尾节点</div><div class="line">transient Node&lt;E&gt; last;</div><div class="line"></div><div class="line">private static class Node&lt;E&gt; &#123;</div><div class="line">		  // 当前存储的元素</div><div class="line">        E item;</div><div class="line">		  // 指向下一个节点</div><div class="line">        Node&lt;E&gt; next;</div><div class="line">        // 指向前一个节点</div><div class="line">        Node&lt;E&gt; prev;</div><div class="line"></div><div class="line">        Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;</div><div class="line">            this.item = element;</div><div class="line">            this.next = next;</div><div class="line">            this.prev = prev;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>LinkedList中包含了 first和last这两个指针，而在Node中则包含了前一个节点和后一个节点的引用，这样每一个Node就能知道它的前一个节点和后一个节点。</p>
+<h6 id="插入元素"><a href="#插入元素" class="headerlink" title="插入元素"></a>插入元素</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">public boolean add(E e) &#123;</div><div class="line">        linkLast(e);</div><div class="line">        return true;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"> void linkLast(E e) &#123;</div><div class="line">	      // 将last的Node引用指向一个新的Node l</div><div class="line">        final Node&lt;E&gt; l = last;</div><div class="line">        // 根据这个Node l新建一个node,其中为元素为想要添加的e</div><div class="line">        final Node&lt;E&gt; newNode = new Node&lt;&gt;(l, e, null);</div><div class="line">		  // 将last Node更新，指向刚刚创建的新Node</div><div class="line">        last = newNode;</div><div class="line">        if (l == null)</div><div class="line">            first = newNode;</div><div class="line">        else</div><div class="line">            l.next = newNode;</div><div class="line">		  // 更新计数</div><div class="line">        size++;</div><div class="line">        modCount++;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>add(E e)方法是在链表尾部添加元素，调用了linkLast(E e) 方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">public void add(int index, E element) &#123;</div><div class="line">		  //越界检查</div><div class="line">        checkPositionIndex(index);</div><div class="line">        if (index == size)</div><div class="line">            linkLast(element);</div><div class="line">        else</div><div class="line">			  // 通过index，得到当前index位置的node节点</div><div class="line">            linkBefore(element, node(index));</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>add(int index,E element) 是在将元素插入到指定的位置上，如果index刚好等于当前链表的大小，则调用linkLast(E e)，将其插入到链表的末尾，否则，则调用linkBefore(E e,Node<e> succ)插入到对应的位置。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line">* @params E e 想要插入的元素</div><div class="line">* @params Node&lt;E&gt; succ 目标位置上的Node值</div><div class="line">/</div><div class="line">void linkBefore(E e, Node&lt;E&gt; succ) &#123;</div><div class="line">       //得到当前位置之前的Node pred</div><div class="line">       final Node&lt;E&gt; pred = succ.prev;</div><div class="line">       //根据这个Node pred新建一个node,其中为元素为想要添加的e</div><div class="line">       final Node&lt;E&gt; newNode = new Node&lt;&gt;(pred, e, succ);</div><div class="line">       //将之前位置上的Node的前一个节点指向当前的这个新节点newNode</div><div class="line">       succ.prev = newNode;</div><div class="line">       if (pred == null)</div><div class="line">           first = newNode;</div><div class="line">       else</div><div class="line">           pred.next = newNode;</div><div class="line">       size++;</div><div class="line">       modCount++;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></e></p>
+<h5 id="移除元素"><a href="#移除元素" class="headerlink" title="移除元素"></a>移除元素</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">E unlink(Node&lt;E&gt; x) &#123;</div><div class="line">		  // 将要被删除的元素，用于方法返回</div><div class="line">       final E element = x.item;</div><div class="line">	  // 当前节点的前一个节点</div><div class="line">       final Node&lt;E&gt; next = x.next;</div><div class="line">       // 当前节点的后一个节点</div><div class="line">       final Node&lt;E&gt; prev = x.prev;</div><div class="line">       if (prev == null) &#123;</div><div class="line">           first = next;</div><div class="line">       &#125; else &#123;</div><div class="line">           prev.next = next;</div><div class="line">           x.prev = null;</div><div class="line">       &#125;</div><div class="line"></div><div class="line">       if (next == null) &#123;</div><div class="line">           last = prev;</div><div class="line">       &#125; else &#123;</div><div class="line">           next.prev = prev;</div><div class="line">           x.next = null;</div><div class="line">       &#125;</div><div class="line"></div><div class="line">       x.item = null;</div><div class="line">       size--;</div><div class="line">       modCount++;</div><div class="line">       return element;</div><div class="line">   &#125;</div></pre></td></tr></table></figure>
+<p>移除某一个元素，实际就上将这个元素的前一个节点指向这个元素的后一个节点，并将这个元素的值设置为null。</p>
+<hr>
+<p> 参考 ：</p>
+<ul>
+<li><a href="http://www.cnblogs.com/tstd/p/5046819.html" target="_blank" rel="external">给jdk写注释系列之jdk1.6容器(2)-LinkedList源码解析</a></li>
+<li><a href="http://www.jianshu.com/p/681802a00cdf" target="_blank" rel="external">Java集合干货系列-（二）LinkedList源码解析</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h5 id=&quot;链表的特点&quot;&gt;&lt;a href=&quot;#链表的特点&quot; class=&quot;headerlink&quot; title=&quot;链表的特点&quot;&gt;&lt;/a&gt;链表的特点&lt;/h5&gt;&lt;h5 id=&quot;LinkedList的特点&quot;&gt;&lt;a href=&quot;#LinkedList的特点&quot; class=&quot;header
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Java" scheme="http://hiyangyue.github.io/tags/Java/"/>
+    
+      <category term="LinkedList" scheme="http://hiyangyue.github.io/tags/LinkedList/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ArrayList原理实现</title>
+    <link href="http://hiyangyue.github.io/2016/12/21/arraylist/"/>
+    <id>http://hiyangyue.github.io/2016/12/21/arraylist/</id>
+    <published>2016-12-21T14:49:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h5 id="ArrayList的特点"><a href="#ArrayList的特点" class="headerlink" title="ArrayList的特点"></a>ArrayList的特点</h5><ul>
+<li>动态数组，容量可以自增长</li>
+<li>线程不安全<br>(不考虑性能的情况下，可以使用Collections.synchronizedList()返回一个线程安全的ArrayList类)</li>
+<li>实现了Serializable接口，支持序列化</li>
+<li>实现了RandomAccess接口，支持随机访问</li>
+<li>实现了Cloneable接口，能够被克隆</li>
+</ul>
+<h5 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h5><p> ArrayList有三种形式的构造器 :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">//该数组用于保存数据，是ArrayList的基础</div><div class="line">private transient Object[] elementData;    </div><div class="line"></div><div class="line">//实际数据的数量    </div><div class="line">private int size;</div><div class="line"></div><div class="line">//指定初始容量的构造器</div><div class="line">public ArrayList(int initialCapacity) &#123;</div><div class="line">  //判断initialCapacity是否合法</div><div class="line">       if (initialCapacity &gt; 0) &#123;</div><div class="line">           this.elementData = new Object[initialCapacity];</div><div class="line">       &#125; else if (initialCapacity == 0) &#123;</div><div class="line">           this.elementData = EMPTY_ELEMENTDATA;</div><div class="line">       &#125; else &#123;</div><div class="line">           throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+</div><div class="line">                                              initialCapacity);</div><div class="line">       &#125;</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   //默认大小的构造器，DEFAULT_CAPACITY = 10</div><div class="line">   public ArrayList() &#123;</div><div class="line">       this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   //包含指定Collection的构造器，这些元素按照迭代器返回它们的顺序排列</div><div class="line">   public ArrayList(Collection&lt;? extends E&gt; c) &#123;</div><div class="line">       elementData = c.toArray();</div><div class="line">       if ((size = elementData.length) != 0) &#123;</div><div class="line">           // c.toArray might (incorrectly) not return Object[] (see 6260652)</div><div class="line">           if (elementData.getClass() != Object[].class)</div><div class="line">               elementData = Arrays.copyOf(elementData, size, Object[].class);</div><div class="line">       &#125; else &#123;</div><div class="line">           this.elementData = EMPTY_ELEMENTDATA;</div><div class="line">       &#125;</div><div class="line">   &#125;</div></pre></td></tr></table></figure>
+<h5 id="调整数组容量"><a href="#调整数组容量" class="headerlink" title="调整数组容量"></a>调整数组容量</h5><p>每当向数组中添加元素时，都需要对元素的个数进行检查，防止数组越界。如果超出，就需要对数组进行扩容。默认情况下，可以通过 public方法ensureCapacity(int minCapacity)调整ArrayList的容量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">public void ensureCapacity(int minCapacity) &#123;</div><div class="line">        int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)</div><div class="line">            // any size if not default element table</div><div class="line">            ? 0</div><div class="line">            // larger than default for default empty table. It&apos;s already</div><div class="line">            // supposed to be at default size.</div><div class="line">            : DEFAULT_CAPACITY;</div><div class="line"></div><div class="line">        if (minCapacity &gt; minExpand) &#123;</div><div class="line">		  //扩容</div><div class="line">            ensureExplicitCapacity(minCapacity);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>如果所需要的容量大小minCapacity大于实际容量的话，则需要对当前的数组进行扩容 ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">private void grow(int minCapacity) &#123;</div><div class="line">        // 当前数组的容量</div><div class="line">        int oldCapacity = elementData.length;</div><div class="line">		  // 新的数组容量为当前数组容量的1.5倍</div><div class="line">        int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);</div><div class="line">		  // 如果新的数组的容量小于就的数组的容量，则默认的数组大小为当前数组的容量</div><div class="line">        if (newCapacity - minCapacity &lt; 0)</div><div class="line">            newCapacity = minCapacity;</div><div class="line">	      // 如果新的数组的容量超过了Integer的最大值，则默认的数组大小这个最大值</div><div class="line">        if (newCapacity - MAX_ARRAY_SIZE &gt; 0)</div><div class="line">            newCapacity = hugeCapacity(minCapacity);</div><div class="line">        // minCapacity is usually close to size, so this is a win:</div><div class="line">        elementData = Arrays.copyOf(elementData, newCapacity);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>从代码上可以看出，在对数组进行扩容的时候，会将老数组中的元素依次拷贝到新的数组里面，所以在实际使用中，应该尽量避免数组扩容。</p>
+<h5 id="添加元素"><a href="#添加元素" class="headerlink" title="添加元素"></a>添加元素</h5><p>在数组为的尾部添加一个元素<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">public boolean add(E e) &#123;</div><div class="line">		 //确定ArrayList容量的大小</div><div class="line">       ensureCapacityInternal(size + 1);  // Increments modCount!!</div><div class="line">       elementData[size++] = e;</div><div class="line">       return true;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></p>
+<p>在指定位置添加一个元素<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">public void add(int index, E element) &#123;</div><div class="line">       //首先判断指定位置的index是否有效(&lt;0或者超过当前数组的容量)</div><div class="line">       rangeCheckForAdd(index);</div><div class="line">       //确定ArrayList容量的大小</div><div class="line">       ensureCapacityInternal(size + 1);  // Increments modCount!!</div><div class="line">		  //调用System.arraycopy将elementData从index开始的size-index个元素复制到index+1至size+1的位置</div><div class="line">       System.arraycopy(elementData, index, elementData, index + 1,</div><div class="line">                        size - index);</div><div class="line">       elementData[index] = element;</div><div class="line">       size++;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></p>
+<h5 id="读取元素"><a href="#读取元素" class="headerlink" title="读取元素"></a>读取元素</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">public E get(int index) &#123;</div><div class="line">       rangeCheck(index);</div><div class="line">       return elementData(index);</div><div class="line">   &#125;</div></pre></td></tr></table></figure>
+<p>因为数组本身支持随机访问，所以get(int index)方法首先会判断index的值是否有效，然后返回对应位置的元素即可.</p>
+<h5 id="删除元素"><a href="#删除元素" class="headerlink" title="删除元素"></a>删除元素</h5><ul>
+<li>根据下标删除元素<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">public E remove(int index) &#123;</div><div class="line">        rangeCheck(index);</div><div class="line"></div><div class="line">        modCount++;</div><div class="line">		  //保存要被移除的元素，用于方法的返回</div><div class="line">        E oldValue = elementData(index);</div><div class="line"></div><div class="line">        int numMoved = size - index - 1;</div><div class="line">        if (numMoved &gt; 0)</div><div class="line">            System.arraycopy(elementData, index+1, elementData, index,</div><div class="line">                             numMoved);</div><div class="line">        elementData[--size] = null; // clear to let GC do its work</div><div class="line"></div><div class="line">        return oldValue;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>从数组中删除元素的操作，会导致移除位置的后面的元素向前移动一个位置。</p>
+<ul>
+<li>根据指定元素删除元素<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">public boolean remove(Object o) &#123;</div><div class="line">        if (o == null) &#123;</div><div class="line">            for (int index = 0; index &lt; size; index++)</div><div class="line">                if (elementData[index] == null) &#123;</div><div class="line">                    fastRemove(index);</div><div class="line">                    return true;</div><div class="line">                &#125;</div><div class="line">        &#125; else &#123;</div><div class="line">            for (int index = 0; index &lt; size; index++)</div><div class="line">                if (o.equals(elementData[index])) &#123;</div><div class="line">                    fastRemove(index);</div><div class="line">                    return true;</div><div class="line">                &#125;</div><div class="line">        &#125;</div><div class="line">        return false;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>ArrayList中允许元素为null，所以应该分null和不为null两种情况处理。成功移除以后，返回true，否则返回false。fastRemove(int index)的remove(int index)基本一样，区别在于fastRemove(int index) 并不会返回被移除的元素。</p>
+<h5 id="trimToSize"><a href="#trimToSize" class="headerlink" title="trimToSize()"></a>trimToSize()</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">public void trimToSize() &#123;</div><div class="line">      modCount++;</div><div class="line">      if (size &lt; elementData.length) &#123;</div><div class="line">          elementData = (size == 0)</div><div class="line">            ? EMPTY_ELEMENTDATA</div><div class="line">            : Arrays.copyOf(elementData, size);</div><div class="line">      &#125;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<p>elementData.length是当前数组的长度，size则是当前元素的实际大小，在扩容的情况下，有可能会出现elementData.length很大，size很小的情况，这样就会造成空间上的浪费，所以trimToSize()返回了一个新的数组给elementData，是elementData.length和size一样。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h5 id=&quot;ArrayList的特点&quot;&gt;&lt;a href=&quot;#ArrayList的特点&quot; class=&quot;headerlink&quot; title=&quot;ArrayList的特点&quot;&gt;&lt;/a&gt;ArrayList的特点&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;动态数组，容量可以自增长&lt;/li&gt;
+&lt;li&gt;线程
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Java" scheme="http://hiyangyue.github.io/tags/Java/"/>
+    
+      <category term="ArrayList" scheme="http://hiyangyue.github.io/tags/ArrayList/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Android开发艺术(四) View的工作原理</title>
+    <link href="http://hiyangyue.github.io/2016/03/17/art_of_android_4/"/>
+    <id>http://hiyangyue.github.io/2016/03/17/art_of_android_4/</id>
+    <published>2016-03-16T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Android开发艺术-四-View的工作原理"><a href="#Android开发艺术-四-View的工作原理" class="headerlink" title="Android开发艺术(四) View的工作原理"></a>Android开发艺术(四) View的工作原理</h1><h3 id="4-1-初识ViewRoot-和-DecorView"><a href="#4-1-初识ViewRoot-和-DecorView" class="headerlink" title="4.1 初识ViewRoot 和 DecorView"></a>4.1 初识ViewRoot 和 DecorView</h3><p>(1) ViewRoot是对应ViewRootImpl类，它是连接WindowsManager和DecorView的纽带。View的三大流程(measure,layout,draw)均是通过ViewRoot来完成的。在ActivityThread中，当Activity对象被创建之后，会将DecorView添加到Windows中，同时会创建ViewRootImpl对象，并且将ViewRootImpl对象和DecorView建立关联。</p>
+<p>(2) View的绘制从ViewRoot的performTraversals方法开始，经过measure,layout和draw三个过程最终将一个View绘制出来，performTraversals会依次调用performMeasure , performLayout和performDraw三个方法，这三个方法分别调用完成顶级View的measure， layout和 draw方法</p>
+<p>(3) View的三大流程 : measure : 测量View的宽和高 ；layout : 确定View在父容器里的位置 ； draw : 负责将View绘制到屏幕上。</p>
+<p>(4) DecorView作为顶级的View,它的内部包含一个竖直的LinearLayout，它包含两个部分 ：　titleBar 和 android.R.id.content(setContentView的具体实现)</p>
+<h3 id="4-2理解MeasureSpec"><a href="#4-2理解MeasureSpec" class="headerlink" title="4.2理解MeasureSpec"></a>4.2理解MeasureSpec</h3><a id="more"></a>
+<p>(1) MesaureSpec</p>
+<p> SpecMode有三类 ：</p>
+<ul>
+<li>UNSPECIFIED : 父容器对View没有限制</li>
+<li>EXACTLY : 父容器已经检测出View所需要的大小</li>
+<li><p>AT_MOST : 父容器指定的View的最大值</p>
+<p><code>int specMode = MeasureSpec.getMode(measureSpec)</code></p>
+</li>
+<li><p>size</p>
+<p> <code>int specSize = MeasureSpec.getSize(measureSpec)</code></p>
+</li>
+</ul>
+<p>(2) MeasureSpec 和LayoutParams的关系<br>MeasureSpec和LayoutParams的对应关系<br>在view测量的时候，系统会将LayoutParams在父容器的约束下转换成对应的MeasureSpec，然后再根据这个MeasureSpec来确定View测量后的宽高。 <strong> MeasureSpec不是唯一由LayoutParams决定的，LayoutParams需要和父容器一起才能决定view的MeasureSpec，从而进一步确定view的宽高。对于DecorView，它的MeasureSpec由窗口的尺寸和其自身的LayoutParams来决定；对于普通view，它的MeasureSpec由父容器的MeasureSpec和自身的LayoutParams来共同决定。</strong></p>
+<p>(3) 如果View没有设置背景，那么View的宽度为mMinWidth,而mMinWidth这个属性所指定的值为android:minWidth所指定的值</p>
+<p>(4) <strong>直接继承View的自定义控件需要重写onMeasure方法并且设置wrap_content自身的大小，否则在布局中使用wrap_content就相当于使用了match_parent </strong></p>
+<h3 id="4-3View的工作流程"><a href="#4-3View的工作流程" class="headerlink" title="4.3View的工作流程"></a>4.3View的工作流程</h3><p>(1)获取View的宽和高<br>    <code>public void onWindowFocusChanged(View view)</code></p>
+<p>(2) layout : layout的作用是ViewGroup确定子元素的位置的，当VieweGroup确定后，会在onLayout中遍历所有元素并调用layout方法，在layout方法中onLayout方法又会被调用。</p>
+<p>(3) draw过程 ： </p>
+<ol>
+<li>绘制背景 (background.draw)</li>
+<li>绘制自己 (onDraw)</li>
+<li>绘制Children (dispatchDraw)</li>
+<li>绘制装饰 (onDrawScrollBars)</li>
+</ol>
+<h2 id="—"><a href="#—" class="headerlink" title="—-"></a>—-</h2><h2 id="—————"><a href="#—————" class="headerlink" title="—————-"></a>—————-</h2><h2 id="——–"><a href="#——–" class="headerlink" title="——–"></a>——–</h2><h2 id="—-1"><a href="#—-1" class="headerlink" title="—-"></a>—-</h2><h2 id="—-2"><a href="#—-2" class="headerlink" title="—-"></a>—-</h2><h2 id="—-3"><a href="#—-3" class="headerlink" title="—-"></a>—-</h2><h2 id="—————-1"><a href="#—————-1" class="headerlink" title="—————-"></a>—————-</h2><h2 id="——–-1"><a href="#——–-1" class="headerlink" title="——–"></a>——–</h2><h2 id="—-4"><a href="#—-4" class="headerlink" title="—-"></a>—-</h2><h2 id="—-5"><a href="#—-5" class="headerlink" title="—-"></a>—-</h2><h2 id="—-6"><a href="#—-6" class="headerlink" title="—-"></a>—-</h2><h2 id="—-7"><a href="#—-7" class="headerlink" title="—-"></a>—-</h2><h2 id="—-8"><a href="#—-8" class="headerlink" title="—-"></a>—-</h2><h2 id="——————–"><a href="#——————–" class="headerlink" title="——————–"></a>——————–</h2><hr>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;Android开发艺术-四-View的工作原理&quot;&gt;&lt;a href=&quot;#Android开发艺术-四-View的工作原理&quot; class=&quot;headerlink&quot; title=&quot;Android开发艺术(四) View的工作原理&quot;&gt;&lt;/a&gt;Android开发艺术(四) View的工作原理&lt;/h1&gt;&lt;h3 id=&quot;4-1-初识ViewRoot-和-DecorView&quot;&gt;&lt;a href=&quot;#4-1-初识ViewRoot-和-DecorView&quot; class=&quot;headerlink&quot; title=&quot;4.1 初识ViewRoot 和 DecorView&quot;&gt;&lt;/a&gt;4.1 初识ViewRoot 和 DecorView&lt;/h3&gt;&lt;p&gt;(1) ViewRoot是对应ViewRootImpl类，它是连接WindowsManager和DecorView的纽带。View的三大流程(measure,layout,draw)均是通过ViewRoot来完成的。在ActivityThread中，当Activity对象被创建之后，会将DecorView添加到Windows中，同时会创建ViewRootImpl对象，并且将ViewRootImpl对象和DecorView建立关联。&lt;/p&gt;
+&lt;p&gt;(2) View的绘制从ViewRoot的performTraversals方法开始，经过measure,layout和draw三个过程最终将一个View绘制出来，performTraversals会依次调用performMeasure , performLayout和performDraw三个方法，这三个方法分别调用完成顶级View的measure， layout和 draw方法&lt;/p&gt;
+&lt;p&gt;(3) View的三大流程 : measure : 测量View的宽和高 ；layout : 确定View在父容器里的位置 ； draw : 负责将View绘制到屏幕上。&lt;/p&gt;
+&lt;p&gt;(4) DecorView作为顶级的View,它的内部包含一个竖直的LinearLayout，它包含两个部分 ：　titleBar 和 android.R.id.content(setContentView的具体实现)&lt;/p&gt;
+&lt;h3 id=&quot;4-2理解MeasureSpec&quot;&gt;&lt;a href=&quot;#4-2理解MeasureSpec&quot; class=&quot;headerlink&quot; title=&quot;4.2理解MeasureSpec&quot;&gt;&lt;/a&gt;4.2理解MeasureSpec&lt;/h3&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Scroll" scheme="http://hiyangyue.github.io/tags/Scroll/"/>
+    
+      <category term="UI" scheme="http://hiyangyue.github.io/tags/UI/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android开发艺术》读书笔记（三）</title>
+    <link href="http://hiyangyue.github.io/2016/03/14/art_of_android_2/"/>
+    <id>http://hiyangyue.github.io/2016/03/14/art_of_android_2/</id>
+    <published>2016-03-13T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="3-1-View基础知识"><a href="#3-1-View基础知识" class="headerlink" title="3.1 View基础知识"></a>3.1 View基础知识</h3><p> (1)  View是一种界面层控件的抽象，是所有控件的基类，ViewGroup是一组View .</p>
+<p> (2) View的位置参数<br> 控件相对于父容器的坐标：top,left,right,bottom;点击事件距离距离控件的距离 x,y;点击事件距离整个屏幕的距离 getRawX(),getRawY();偏移量translationX,translationY .</p>
+<p> (3) MotionEvent :手指在接触屏幕之后产生的一系列的事件，主要有: ACTION_DOWN , ACTION_MOVE , ACTION_UP。正常情况下，一次触屏会触发一系列的点击事件，有两种典型情况</p>
+<ol>
+<li>点击屏幕之后，事件序列为 DOWN -&gt; UP</li>
+<li><p>点击屏幕之后滑动松开 事件序列为 : DOWN -&gt; MOVE -&gt; …… -&gt; MOVE -&gt; UP</p>
+<a id="more"></a>
+</li>
+</ol>
+<p>(4) TouchSlop : 系统所能识别的被认为滑动的最小距离 ,获取方式 ：</p>
+<blockquote>
+<p>ViewConfiguration.get(getContext()).getScaledTouchSlop();</p>
+</blockquote>
+<p>(5) GestureDetector : 用于辅助检测用户单击、滑动、长按、双击的行为。(<strong>如果只是监听滑动相关的事件，在onTouchEvent中完成，如果监听双击这种行为，则使用GestureDetector</strong> )</p>
+<p>(6) Scroller : 参见 <a href="http://hiyangyue.github.io/2015/12/02/reading_note_2/">《Android群英传》</a></p>
+<hr>
+<h3 id="3-2-View的滑动"><a href="#3-2-View的滑动" class="headerlink" title="3.2 View的滑动"></a>3.2 View的滑动</h3><p>常见的滑动的方式 :</p>
+<ol>
+<li>SrollTo / ScrollBy , 但是移动的只是 <strong>View的内容</strong></li>
+<li>动画 , <strong>对View影像的操作，动画结束之后并不会改变View原本的位置，如果希望动画之后的状态得以保存，则需要将fillAfter属性设置为true</strong></li>
+<li>改变View的LayoutParams使得Veiw重新布局，<strong>操作复杂</strong></li>
+</ol>
+<h3 id="3-3-弹性滑动"><a href="#3-3-弹性滑动" class="headerlink" title="3.3 弹性滑动"></a>3.3 弹性滑动</h3><p>常见的弹性滑动的两种方式 ：</p>
+<ul>
+<li><p>使用Scroller</p>
+<p>Scroller的工作原理：Scroller本身并不能实现view的滑动，它需要配合view的computeScroll方法才能完成弹性滑动的效果，它不断地让view重绘，而每一次重绘距滑动起始时间会有一个时间间隔，通过这个时间间隔Scroller就可以得出view的当前的滑动位置，知道了滑动位置就可以通过scrollTo方法来完成view的滑动。就这样，view的每一次重绘都会导致view进行小幅度的滑动，而多次的小幅度滑动就组成了弹性滑动，这就是Scroller的工作原理。</p>
+</li>
+<li><p>延时策略</p>
+<p>使用延时策略来实现弹性滑动，它的核心思想是通过发送一系列延时消息从而达到一种渐进式的效果，具体来说可以使用Handler<br>的sendEmptyMessageDelayed(xxx)或view的postDelayed方法，也可以使用线程的sleep方法。</p>
+</li>
+</ul>
+<h3 id="3-4-View的事件分发"><a href="#3-4-View的事件分发" class="headerlink" title="3.4 View的事件分发"></a>3.4 View的事件分发</h3><p>(1) 事件分发的三个方法</p>
+<pre><code>public boolean dispatchTouchEvent(MotionEvent ev)
+</code></pre><p>用来进行事件的分发。如果事件能够传递给当前view，那么此方法一定会被调用，返回结果受当前view的onTouchEvent和下级view的dispatchTouchEvent方法的影响，表示是否消耗当前事件。</p>
+<pre><code>public boolean onInterceptTouchEvent(MotionEvent event)
+</code></pre><p>在dispatchTouchEvent方法内部调用，用来判断是否拦截某个事件，如果当前view拦截了某个事件，那么在同一个事件序列当中，此方法不会再被调用，返回结果表示是否拦截当前事件。<br>若返回值为True事件会传递到自己的onTouchEvent()；<br>若返回值为False传递到子view的dispatchTouchEvent()。</p>
+<pre><code>public boolean onTouchEvent(MotionEvent event)
+</code></pre><p>在dispatchTouchEvent方法内部调用，用来处理点击事件，返回结果表示是否消耗当前事件，如果不消耗，则在同一个事件序列中，当前view无法再次接收到事件。<br>若返回值为True，事件由自己处理，后续事件序列让其处理；<br>若返回值为False，自己不消耗事件，向上返回让其他的父容器的onTouchEvent接受处理。</p>
+<p>(2) 优先级 onTouch &gt; onTouchEvent &gt; onClick</p>
+<p>当View需要处理事件时，如果它设置了OnTouchListener ，那么它的onTouch方法将会被调用，如果onTouch的返回值为false,则当前View的onTouchEvent方法将会被调用，如果返回为true,那么onTouchEvent将不会被调用。</p>
+<p>(3) 当一个事件发生之后，传递顺序 : Activity -&gt; Windows -&gt; View</p>
+<p>(4) 正常情况下， <strong>一个事件序列只能被一个View拦截</strong> ，一旦一个元素拦截了某个事件，那么同一个事件序列内的所有事情都会交个它处理</p>
+<p>(5) 某个view一旦开始处理事件，如果它不消耗ACTION_DOWN事件，那么同一事件序列的其他事件都不会再交给它来处理，并且事件将重新交给它的父容器去处理(调用父容器的onTouchEvent方法)；如果它消耗ACTION_DOWN事件，但是不消耗其他类型事件，那么这个点击事件会消失，父容器的onTouchEvent方法不会被调用，当前view依然可以收到后续的事件，但是这些事件最后都会传递给Activity处理。</p>
+<p>(6) View的onTouchEvent默认都会消耗事件(返回true)，除非它是不可点击的(clickable和longClickable都为false)。</p>
+<p>(7) View的enable属性不影响onTouchEvent的默认返回值。</p>
+<p>(8) 事件传递过程总是先传递给父元素，然后再由父元素分发给子view，通过requestDisallowInterceptTouchEvent方法可以在子元素中干预父元素的事件分发过程，但是ACTION_DOWN事件除外，即当面对ACTION_DOWN事件时，ViewGroup总是会调用自己的onInterceptTouchEvent方法来询问自己是否要拦截事件。</p>
+<h3 id="3-5-滑动冲突场景"><a href="#3-5-滑动冲突场景" class="headerlink" title="3.5 滑动冲突场景"></a>3.5 滑动冲突场景</h3><p>常见的滑动冲突场景</p>
+<ol>
+<li>外部、内部滑动的方向不一致 , 比如ViewPager包含ListView</li>
+<li>外部、内部滑动方向一致，是滑动A还是滑动B</li>
+<li>上面两种情况的嵌套，比如ViewPager中既包含了ViewPager,也包含ListView</li>
+</ol>
+<p>常见的处理冲突的解决方式：</p>
+<ol>
+<li>外部拦截法 : 点击事件都先经过父容器的拦截处理，如果父容器需要此事件就拦截，如果不需要就不拦截。该方法需要重写父容器的onInterceptTouchEvent方法</li>
+<li>内部拦截法：父容器不拦截任何事件，所有的事件都传递给子元素，如果子元素需要此事件就直接消耗掉，否则就交给父容器来处理。这种方法和Android中的事件分发机制不一致，需要配合requestDisallowInterceptTouchEvent方法才能正常工作。</li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;3-1-View基础知识&quot;&gt;&lt;a href=&quot;#3-1-View基础知识&quot; class=&quot;headerlink&quot; title=&quot;3.1 View基础知识&quot;&gt;&lt;/a&gt;3.1 View基础知识&lt;/h3&gt;&lt;p&gt; (1)  View是一种界面层控件的抽象，是所有控件的基类，ViewGroup是一组View .&lt;/p&gt;
+&lt;p&gt; (2) View的位置参数&lt;br&gt; 控件相对于父容器的坐标：top,left,right,bottom;点击事件距离距离控件的距离 x,y;点击事件距离整个屏幕的距离 getRawX(),getRawY();偏移量translationX,translationY .&lt;/p&gt;
+&lt;p&gt; (3) MotionEvent :手指在接触屏幕之后产生的一系列的事件，主要有: ACTION_DOWN , ACTION_MOVE , ACTION_UP。正常情况下，一次触屏会触发一系列的点击事件，有两种典型情况&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;点击屏幕之后，事件序列为 DOWN -&amp;gt; UP&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;点击屏幕之后滑动松开 事件序列为 : DOWN -&amp;gt; MOVE -&amp;gt; …… -&amp;gt; MOVE -&amp;gt; UP&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="View" scheme="http://hiyangyue.github.io/tags/View/"/>
+    
+      <category term="事件分发" scheme="http://hiyangyue.github.io/tags/%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>常用工具类整理</title>
+    <link href="http://hiyangyue.github.io/2016/01/26/utils/"/>
+    <id>http://hiyangyue.github.io/2016/01/26/utils/</id>
+    <published>2016-01-25T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在写Material Travel的时候写了一点工具类，今天做一个整理，以后遇到继续补充。</p>
+<h3 id="已添加"><a href="#已添加" class="headerlink" title="已添加"></a>已添加</h3><h5 id="Base类"><a href="#Base类" class="headerlink" title="Base类"></a>Base类</h5><ul>
+<li><a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fbase%2FBaseActivity.java" target="_blank" rel="external">BaseActivity</a></li>
+<li><a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fbase%2FBaseNavActivity.java" target="_blank" rel="external">NavBaseActivity</a></li>
+</ul>
+<a id="more"></a>
+<h5 id="Tools"><a href="#Tools" class="headerlink" title="Tools"></a>Tools</h5><ul>
+<li>File相关 ： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Futils%2FFileUtils.java" target="_blank" rel="external">FileUtils</a></li>
+<li>Debug相关 ： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Futils%2FDBug.java" target="_blank" rel="external">DBug</a></li>
+<li>毛玻璃效果 ： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Futils%2FBlurUtils.java" target="_blank" rel="external">BlurUtils</a></li>
+<li>Bitmap优化和转换： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Futils%2FBitmapUtils.java" target="_blank" rel="external">BitmapUtils</a></li>
+<li>屏幕 、Toolbar 距离 ： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Futils%2FDistanceUtils.java" target="_blank" rel="external">DistanceUtils</a></li>
+</ul>
+<h5 id="widget"><a href="#widget" class="headerlink" title="widget"></a>widget</h5><ul>
+<li>自定义字体 ： <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FFontTextView.java" target="_blank" rel="external">FontTextView</a></li>
+<li>圆形头像 : <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FCircleImageView.java" target="_blank" rel="external">CircleImageView</a></li>
+<li>滑动隐藏Fab ：<a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FFABScrollBehavior.java" target="_blank" rel="external">FABScrollBehavior</a></li>
+<li>ViewPager自动轮播 <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FAutoScrollViewPager.java" target="_blank" rel="external">AutoScrollViewPager</a></li>
+<li>RecyclerView Item间距 <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FDividerItemDecoration.java" target="_blank" rel="external">DividerItemDecoration</a> &amp;&amp; <a href="https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fwidget%2FGridSpacingItemDecoration.java" target="_blank" rel="external">GridSpacingItemDecoration</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在写Material Travel的时候写了一点工具类，今天做一个整理，以后遇到继续补充。&lt;/p&gt;
+&lt;h3 id=&quot;已添加&quot;&gt;&lt;a href=&quot;#已添加&quot; class=&quot;headerlink&quot; title=&quot;已添加&quot;&gt;&lt;/a&gt;已添加&lt;/h3&gt;&lt;h5 id=&quot;Base类&quot;&gt;&lt;a href=&quot;#Base类&quot; class=&quot;headerlink&quot; title=&quot;Base类&quot;&gt;&lt;/a&gt;Base类&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fbase%2FBaseActivity.java&quot;&gt;BaseActivity&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/hiyangyue/Utils/blob/master/app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fhiyangyue%2Futils%2Fbase%2FBaseNavActivity.java&quot;&gt;NavBaseActivity&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android Performance Patterns Season 1》 笔记</title>
+    <link href="http://hiyangyue.github.io/2016/01/05/android_performance_pattern_1/"/>
+    <id>http://hiyangyue.github.io/2016/01/05/android_performance_pattern_1/</id>
+    <published>2016-01-05T02:09:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="Render-渲染"><a href="#Render-渲染" class="headerlink" title="Render(渲染)"></a>Render(渲染)</h3><p>大多数用户感知到的卡顿等性能问题的最主要根源都是因为渲染性能。 从设计的角度来说，APP能有更多的动画图片元素固然能够提升用户的体验，但是Android系统并不是每次都能完成复杂界面的渲染操作。Android系统每16ms会重新绘制Activity,渲染的时间只有 <strong>&lt;= 16ms</strong> 才能达到60帧/s，也就意味着，为了让APP能够流畅的运行，程序的绝大多数的操作必须在16ms内完成。</p>
+<p><img src="/images/draw_per_16.png" alt=""></p>
+<p>如果花费的时间是24ms，系统就无法进行正常渲染，这样就出现了掉帧的现象，那么用户则是在32ms内看到的会是同一帧的画面，这就是让用户觉得卡顿的原因。</p>
+<a id="more"></a>
+<p><img src="/images/vsync_over_draw.png" alt=""></p>
+<p>可能导致掉帧的原因：</p>
+<ul>
+<li>layout过于复杂/层叠过渡</li>
+<li>动画执行次数过渡</li>
+</ul>
+<p>屏幕上的同一时间内被绘制了多次是Overdraw(过渡绘制)的主要原因，在多层次的UI结构里，即使底层的UI看不见，系统也会做绘制的操作，导致某些像素上被绘制了多次，这样就会导致系统资源的浪费。</p>
+<p><img src="/images/overdraw_hidden_view.png" alt=""></p>
+<p>Android系统提供了检查UI overdraw的工具 : Show GPU Overdraw。</p>
+<p><img src="/images/overdraw.png" alt=""></p>
+<p>如图，颜色越深表示overdraw越严重。</p>
+<p>通过树的高度查看布局是否复杂(所以如果布局相对复杂，使用RelativeLayout能减少树的高度，也就是减少布局的层叠)</p>
+<ul>
+<li>TraceView</li>
+</ul>
+<h3 id="VSYNC-Vertical-Synchronization，垂直同步"><a href="#VSYNC-Vertical-Synchronization，垂直同步" class="headerlink" title="VSYNC(Vertical Synchronization，垂直同步)"></a>VSYNC(Vertical Synchronization，垂直同步)</h3><p>VSYNC有两个重要的概念:</p>
+<ul>
+<li><p>Refresh Rate(刷新率)</p>
+<p>代表了屏幕在一秒内刷新屏幕的次数，比如60Hz</p>
+</li>
+<li>Frame Rate(帧速率)<br>代表了GPU在一秒内绘制操作的帧数,比如30fps,60fps。</li>
+</ul>
+<h3 id="Profile-GPU-Rendering"><a href="#Profile-GPU-Rendering" class="headerlink" title="Profile GPU Rendering"></a>Profile GPU Rendering</h3><p>Profile GPU Rendering是系统提供的检查APP渲染的工具,在Setting —— Developer Options —— Profile GPU Rendering，开关选择on,</p>
+<p>随着界面的刷新，界面上会滚动显示柱状图表示每一帧所需要花费的时间，柱状图越高表示渲染花费的时间就越长。中间的绿色的横线，代表的就是之前说的16ms,要确保每一帧的高度低于这条线，才能避免卡顿的现象。</p>
+<p><img src="/images/gpu_profile_three_color.png" alt=""></p>
+<p>每一条柱状线都包含三部分，</p>
+<ul>
+<li>蓝色 : 绘制Display List的时间</li>
+<li>红色 : 渲染Display List的时间</li>
+<li>黄色 : CPU等待GPU处理的时间</li>
+</ul>
+<h3 id="GPU是如何进行画面渲染的"><a href="#GPU是如何进行画面渲染的" class="headerlink" title="GPU是如何进行画面渲染的"></a>GPU是如何进行画面渲染的</h3><p><img src="/images/gpu_rasterization.png" alt=""></p>
+<p>Resterization(栅格化)是绘制Button,Shape等常用组件的基本操作，它把这些组件拆分到不同的像素上进行显示，但是Resterization是一个很费事的过程，所以Android引入GPU加快了Resterization过程。</p>
+<h3 id="UI组件的更新"><a href="#UI组件的更新" class="headerlink" title="UI组件的更新"></a>UI组件的更新</h3><p>在DisplayList的帮助下，Android需要把XML布局文件转换成GPU能够识别的并且绘制的对象，DisplayList持有所有将要交给GPU会知道屏幕的数据。</p>
+<p>在某个View第一次需要被绘制的时候，DisplayList会被创建，当这个View显示到屏幕上的时候，系统会执行CPU的绘制指令完成渲染，<strong> 如果后续的操作仅是移动这个View,只要外操作一次渲染指令就够了，但是如果修改了View中的某个组件，那么值钱的DisplayList就无法使用，我们就需要重新创建一个DisplayList并且重新执行渲染指令更新到屏幕上了 </strong> 。</p>
+<p>任何时候View中的绘制内容发生变化时，都会重新执行创建、渲染、更新DisplayList,但是这个过程的表现取决于当前View的复杂度。比如，假设某个Button的大小需要增大到目前的两倍，那么在增大这个Button之前，需要通过父View重新计算并摆放其他子View的位置。修改View，会 <strong> 触发整个HierarchyViewer重新计算大小的操作 </strong> ，而修改View的位置则会触发HierarchyViewer重新计算View的位置，所以减少Overdraw就显得非常必要了。</p>
+<h3 id="减少自定义View的Overdraw"><a href="#减少自定义View的Overdraw" class="headerlink" title="减少自定义View的Overdraw"></a>减少自定义View的Overdraw</h3><p>前面有提过，不可见但是存在的UI组件绘制更新的时候会导致Overdraw,比如Nav Drawer滑出之后，如果继续绘制Nav Drawer里面不可见的组件之后，就会导致Overdraw,为了解决这个问题，系统提供了几个API来避免绘制那些不可见的组件来减少Overdraw</p>
+<ul>
+<li>canvas.clipRect()<br>指定一块区域，只有在这个区域内的内容才会被绘制。</li>
+</ul>
+<ul>
+<li>canvas.quickreject()<br>判断是否没和某个矩形相交，从而跳过那些非矩形区域内的绘制操作。</li>
+</ul>
+<h3 id="Memory-Monitor"><a href="#Memory-Monitor" class="headerlink" title="Memory Monitor"></a>Memory Monitor</h3><p>Android Studio中的一个工具，可以帮助我们更好的查看内存使用的情况。</p>
+<p><img src="/images/memory_monitor_overview.png" alt=""></p>
+<p><img src="/images/memory_monitor_free_allocation.png" alt=""></p>
+<p><img src="/images/memory_monitor_gc_event.png" alt=""></p>
+<p>GC这边打算以后系统的学习一下，暂且略过。</p>
+<hr>
+<p>资源：</p>
+<ul>
+<li><a href="https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE" target="_blank" rel="external">Android Performance Patterns Season 1</a></li>
+<li><a href="http://v.youku.com/v_show/id_XODk2NjkwNjM2.html?f=23494296&amp;from=y1.2-3.4.1" target="_blank" rel="external">Android 性能模式 第一季</a></li>
+</ul>
+<hr>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;Render-渲染&quot;&gt;&lt;a href=&quot;#Render-渲染&quot; class=&quot;headerlink&quot; title=&quot;Render(渲染)&quot;&gt;&lt;/a&gt;Render(渲染)&lt;/h3&gt;&lt;p&gt;大多数用户感知到的卡顿等性能问题的最主要根源都是因为渲染性能。 从设计的角度来说，APP能有更多的动画图片元素固然能够提升用户的体验，但是Android系统并不是每次都能完成复杂界面的渲染操作。Android系统每16ms会重新绘制Activity,渲染的时间只有 &lt;strong&gt;&amp;lt;= 16ms&lt;/strong&gt; 才能达到60帧/s，也就意味着，为了让APP能够流畅的运行，程序的绝大多数的操作必须在16ms内完成。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/draw_per_16.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;如果花费的时间是24ms，系统就无法进行正常渲染，这样就出现了掉帧的现象，那么用户则是在32ms内看到的会是同一帧的画面，这就是让用户觉得卡顿的原因。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Activity" scheme="http://hiyangyue.github.io/tags/Activity/"/>
+    
+      <category term="Performance Optimization" scheme="http://hiyangyue.github.io/tags/Performance-Optimization/"/>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>HashMap的实现</title>
+    <link href="http://hiyangyue.github.io/2015/12/14/hash_map/"/>
+    <id>http://hiyangyue.github.io/2015/12/14/hash_map/</id>
+    <published>2015-12-14T15:13:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Context" scheme="http://hiyangyue.github.io/tags/Context/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Context ,getApplicationContext(),getBaseContext()的区别</title>
+    <link href="http://hiyangyue.github.io/2015/12/14/context/"/>
+    <id>http://hiyangyue.github.io/2015/12/14/context/</id>
+    <published>2015-12-14T15:13:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在Android中经常会遇到Context相关的内容，但是平时只只要有提示了要用，对具体的概念很模式，所以今天就抽空查看了一些资料。</p>
+<p>官方文档对于Context的介绍：</p>
+<blockquote>
+<p>Interface to global information about an application environment. This is an abstract class whose implementation is provided by the Android system. It allows access to application-specific resources and classes, as well as up-calls for application-level operations such as launching activities, broadcasting and receiving intents, etc.</p>
+</blockquote>
+<a id="more"></a>
+<p>  翻译过来就是：</p>
+<p>   Context是Android应用的全局信息的接口。它是一个虚类，它的实现由Android系统完成。它提供了对某个应用的资源和类的访问权限，也提供对应用层面操作(如启动Activity，发送broadcast，接受intent)的调用接口。</p>
+<p>Context大部分是用来加载和操作资源的，所以在日常开发中，Context在很多情况下都有需要，比如一些组件会要求在构造函数里接收一个Context参数。</p>
+<p>我们通常想要获取的Context对象，主要有四种方式：</p>
+<ul>
+<li>View.getContext,返回当前View对象的Context对象，通常是当前正在展示的Activity对象。</li>
+<li>Activity.getApplicationContext,获取当前Activity所在的(应用)进程的Context对象，<strong>它的生命周期就是整个应用</strong>。</li>
+<li>ContextWrapper.getBaseContext():用来获取一个ContextWrapper进行装饰之前的Context(这个方法没怎么用过)</li>
+<li>Activity.this 返回当前的Activity实例，<strong>它的生命周期是当前的Activity</strong>。</li>
+</ul>
+<p>如果不恰当的调用会导致内存泄露，比如生命周期长的对象引用Activity的Context，而生命周期短的对象引用生命周期长的对象。</p>
+<hr>
+<p>参考：</p>
+<ul>
+<li><a href="http://developer.android.com/intl/zh-cn/reference/android/content/Context.html" target="_blank" rel="external">http://developer.android.com/intl/zh-cn/reference/android/content/Context.html</a></li>
+<li><a href="http://droidyue.com/blog/2015/04/12/avoid-memory-leaks-on-context-in-android/" target="_blank" rel="external">避免Android中Context引起的内存泄露</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在Android中经常会遇到Context相关的内容，但是平时只只要有提示了要用，对具体的概念很模式，所以今天就抽空查看了一些资料。&lt;/p&gt;
+&lt;p&gt;官方文档对于Context的介绍：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Interface to global information about an application environment. This is an abstract class whose implementation is provided by the Android system. It allows access to application-specific resources and classes, as well as up-calls for application-level operations such as launching activities, broadcasting and receiving intents, etc.&lt;/p&gt;
+&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Context" scheme="http://hiyangyue.github.io/tags/Context/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android开发艺术》读书笔记（一）</title>
+    <link href="http://hiyangyue.github.io/2015/12/06/art_of_android_1/"/>
+    <id>http://hiyangyue.github.io/2015/12/06/art_of_android_1/</id>
+    <published>2015-12-06T14:49:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h5 id="1-典型情况下的生命周期分析"><a href="#1-典型情况下的生命周期分析" class="headerlink" title="1.    典型情况下的生命周期分析"></a>1.    典型情况下的生命周期分析</h5><p>(1)    onCreate( )方法 是生命周期的<strong>第一个方法</strong>,主要进行初始化的工作</p>
+<p>(2) 一般情况下，Activity从不可见到可见调用onRestart( )方法</p>
+<p>(3) onStart()表示Activity正在被启动，Activity已经显示出来，但是我们还看不到(可以理解为Activity在后台)</p>
+<p>(4) onResume() 表示Activity已经显示出来并且可见(可以理解为Activity在前台)</p>
+<p>(5) 当用户打开新的Activity或者切换到桌面的时候，回调如下：onPause -&gt; onStop，但是<strong>如果新Activity采用了透明主题，那么onStop方法不会被回调</strong>。当用户再次回到原来的Activity时，回调如下：onRestart -&gt; onStart -&gt; onResume。</p>
+<p>(6)onStart和onStop对应，它们是从Activity是否可见这个角度来回调的；onPause和onResume方法对应，它们是从Activity是否位于前台这个角度来回调的。</p>
+<p>(7) 从Activity A进入到Activity B，回调顺序是onPause(A) -&gt; onCreate(B) -&gt; onStart(B) -&gt; onResume(B) -&gt; onStop(A)，所以不能在onPause方法中做重量级的操作</p>
+<a id="more"></a>
+<h5 id="1-异常情况下的生命周期分析"><a href="#1-异常情况下的生命周期分析" class="headerlink" title="1.   异常情况下的生命周期分析"></a>1.   异常情况下的生命周期分析</h5><ul>
+<li>系统配置改变导致Activity被kill并重新创建</li>
+</ul>
+<p>比如旋转屏幕，Activity在异常终止的情况下会调用onSaveInstance方法来保存当前Activity的状态，这个方法在onStop()之前，与onPause没有时序关系，可能在onPause之前也可能在之后。Activity被重新创建之后，onRestoreInstanceState会在onStart之后被调用。注意：Activity只有在<strong>被异常终止</strong>的时候才会被调用。</p>
+<ul>
+<li>资源不足导致</li>
+</ul>
+<p>Activity优先级 : 前台(onResume) &gt;&gt;  可见但非前台(onPause) &gt;&gt;后台(onStop) 。</p>
+<p>android:configChanges常见的属性 :</p>
+<ul>
+<li>local：设备的本地位置发生了变化，一般指切换了系统语言</li>
+<li>keyboardHidden：键盘的可访问性发生了变化，比如用户调出了键盘</li>
+<li>orientation：屏幕方向发生了变化，比如旋转了手机屏幕</li>
+</ul>
+<h3 id="Activity启动模式"><a href="#Activity启动模式" class="headerlink" title="Activity启动模式"></a>Activity启动模式</h3><ul>
+<li>standard标准模式</li>
+</ul>
+<p>系统默认模式，每次启动一个Activity都会重新创建一个新的实例，不管这个实例是否已经存在。<strong>非Activity类型的Context(比如ApplicationContext)无法以standard模式启动新的Activity，有因为这类Activity中没有任务栈，所以要为启动的Activity制定FLAG_ACTIVITY_NEW_TASK标志位，也就是singleTask模式</strong></p>
+<ul>
+<li>singleTop栈顶复用模式</li>
+</ul>
+<p>如果新的Activity已经位于任务栈的栈顶，那么此Activity不会被重新创建，同时它的onNewIntent方法会被毁掉。</p>
+<p>(比如一下子收到了10个QQ消息，如果每次收到信息都重新创建一个实例的话，就显得不太合适了，所以用singleTop)</p>
+<ul>
+<li>singleTask栈内复用模式</li>
+</ul>
+<p>只要Activity在同一个栈中，那么无论Activity重复启动多少次，都不会重新创建实例。当启动一个带有singleTask模式的Activity之后，比如Activity A,系统首先会查看是否存在A想要的任务栈，如果不存在就重新创建，然后把A的实例放到栈中，如果实例存在，系统则会把它调到栈顶并将A上面的Activity全部出栈。</p>
+<ul>
+<li>singleInstance</li>
+</ul>
+<p>具有singleTask的所有特性，并且这种模式的Activity<strong>只能单独的位于一个任务栈中</strong>。比如启动ssingleInstance模式的Activity A,系统会为它创建要给新的Activity，A独自在这个新的任务栈中，除非这个任务栈被销毁，否则后续的请求都不会创建新的Activity。</p>
+<h3 id="Activity-Flags"><a href="#Activity-Flags" class="headerlink" title="Activity Flags"></a>Activity Flags</h3><p>常用的标记位：</p>
+<ul>
+<li>FLAG_ACTIVITY_NEW_TASK(等同于singleTask)</li>
+<li>FLAG_ACITVITY_SINGLE_TOP(singleTop)</li>
+<li>FLAG_ACITVITY_CLEAR_TOP</li>
+</ul>
+<p>当它启动时，在同一个栈中的所有位于它上面的Activity都要出栈。(singleTask模式自带这种效果)</p>
+<ul>
+<li>FLAG_ACITITY_EXCLUDE_FROM_RECENTS</li>
+</ul>
+<p>具有这个标记位的Activity不会出现在历史Activity的列表中</p>
+<h3 id="IntentFilter匹配规则"><a href="#IntentFilter匹配规则" class="headerlink" title="IntentFilter匹配规则"></a>IntentFilter匹配规则</h3><p>示例：</p>
+<p>为了匹配过滤列表，需要同时匹配过滤列表中的action、category、data信息，否则匹配失败。一个过滤列表中的action、category、data可以有多个，所有的action、category、data分别构成不同类别，同一类别的信息共同约束当前类别的匹配过程。<strong>只有一个Intent同时匹配action类别、category类别和data类别才算完全匹配，只有完全匹配才能成功启动目标Activity。此外，一个Activity中可以有多个intent-filter，一个Intent只要能匹配任何一组intenf-filter即可成功启动对应的Activity</strong>。</p>
+<h6 id="1-action匹配规则"><a href="#1-action匹配规则" class="headerlink" title="(1)action匹配规则"></a>(1)action匹配规则</h6><p>只要Intent中的action能够和过滤规则中的任何一个action相同即可匹配成功，<strong>action匹配区分大小写</strong>。</p>
+<h6 id="2-category匹配规则"><a href="#2-category匹配规则" class="headerlink" title="(2)category匹配规则"></a>(2)category匹配规则</h6><p>category那么所有的category都必须和过滤规则中的其中一个category相同，如果没有category的话那么就是默认的category(android.intent.category.DEFAULT),<strong>category要求Intent可以没有category,但是一旦有category,不管有几个，每个都要能够过滤规则中的任何一个category相同</strong>。</p>
+<h6 id="3-data匹配规则"><a href="#3-data匹配规则" class="headerlink" title="(3)data匹配规则"></a>(3)data匹配规则</h6><p>data 语法：</p>
+<pre><code>
+
+android:scheme="string"
+android:host="string"
+android:port="string"
+android:path="string"
+android:pathPattern="string"
+android:pathPrefix="string"
+android:mimeType="string" />
+
+</code></pre>
+
+
+
+
+<p>data主要由mimeType和URI组成，其中mimeType代表媒体类型，而URL包含的数据就比较复杂了，<br>scheme、host、port分别表示URI的模式、主机名和端口号。其中如果scheme或者host未指定那么URI就无效。path、pathPattern、pathPrefix都是表示路径信息，其中path表示完整的路径信息，pathPrefix表示路径的前缀信息；pathPattern表示完整的路径，但是它里面包含了通配符(* )。</p>
+<h5 id="PackManager判断是否有Activity能够匹配隐式的Intent"><a href="#PackManager判断是否有Activity能够匹配隐式的Intent" class="headerlink" title="PackManager判断是否有Activity能够匹配隐式的Intent"></a>PackManager判断是否有Activity能够匹配隐式的Intent</h5><p>PackManager提供了两个方法</p>
+<p>(1)resolveActivity()，如果匹配不到Activity就会返回null<br>(2)queryIntentActiviy()，它匹配的是<strong>所有成功匹配的Activity信息</strong>。</p>
+<h5 id="入口Activity的表示"><a href="#入口Activity的表示" class="headerlink" title="入口Activity的表示"></a>入口Activity的表示</h5><blockquote>
+<p>   <intent-filter><br>        <action android:name="android.intent.action.MAIN"><br>        <category android:name="android.intent.category.LAUNCHER"><br>    </category></action></intent-filter></p>
+</blockquote>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h5 id=&quot;1-典型情况下的生命周期分析&quot;&gt;&lt;a href=&quot;#1-典型情况下的生命周期分析&quot; class=&quot;headerlink&quot; title=&quot;1.    典型情况下的生命周期分析&quot;&gt;&lt;/a&gt;1.    典型情况下的生命周期分析&lt;/h5&gt;&lt;p&gt;(1)    onCreate( )方法 是生命周期的&lt;strong&gt;第一个方法&lt;/strong&gt;,主要进行初始化的工作&lt;/p&gt;
+&lt;p&gt;(2) 一般情况下，Activity从不可见到可见调用onRestart( )方法&lt;/p&gt;
+&lt;p&gt;(3) onStart()表示Activity正在被启动，Activity已经显示出来，但是我们还看不到(可以理解为Activity在后台)&lt;/p&gt;
+&lt;p&gt;(4) onResume() 表示Activity已经显示出来并且可见(可以理解为Activity在前台)&lt;/p&gt;
+&lt;p&gt;(5) 当用户打开新的Activity或者切换到桌面的时候，回调如下：onPause -&amp;gt; onStop，但是&lt;strong&gt;如果新Activity采用了透明主题，那么onStop方法不会被回调&lt;/strong&gt;。当用户再次回到原来的Activity时，回调如下：onRestart -&amp;gt; onStart -&amp;gt; onResume。&lt;/p&gt;
+&lt;p&gt;(6)onStart和onStop对应，它们是从Activity是否可见这个角度来回调的；onPause和onResume方法对应，它们是从Activity是否位于前台这个角度来回调的。&lt;/p&gt;
+&lt;p&gt;(7) 从Activity A进入到Activity B，回调顺序是onPause(A) -&amp;gt; onCreate(B) -&amp;gt; onStart(B) -&amp;gt; onResume(B) -&amp;gt; onStop(A)，所以不能在onPause方法中做重量级的操作&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Activity" scheme="http://hiyangyue.github.io/tags/Activity/"/>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="生命周期" scheme="http://hiyangyue.github.io/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android群英传》读书笔记（三）</title>
+    <link href="http://hiyangyue.github.io/2015/12/03/reading_note_3/"/>
+    <id>http://hiyangyue.github.io/2015/12/03/reading_note_3/</id>
+    <published>2015-12-02T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>这篇读书笔记的内容主要是 :  第9章 Activity系统信息与安全机制  + 第10章 Android性能优化</p>
+<p>第8章为Activity生命周期，推荐阅读官方关于Activity生命周期的文档：<a href="http://developer.android.com/intl/zh-cn/training/basics/activity-lifecycle/starting.html" target="_blank" rel="external">管理Activity生命周期</a></p>
+<p>关于第10章中的图片优化，同样推荐官方关于Bitmap展示优化的文档，写的很棒：<a href="http://developer.android.com/intl/zh-cn/training/displaying-bitmaps/index.html" target="_blank" rel="external">Displaying Bitmaps Efficiently</a><br> <a id="more"></a></p>
+<h3 id="1-获取系统信息"><a href="#1-获取系统信息" class="headerlink" title="1.  获取系统信息"></a>1.  获取系统信息</h3><p>android.OS.Build 和 SystemProperty</p>
+<pre><code>
+
+String board = Build.BOARD;
+String brand = Build.BRAND;
+String supported_abis = Build.SUPPORTED_ABIS[0];
+String device = Build.DEVICE;
+String display = Build.DISPLAY;
+String fingerprint = Build.FINGERPRINT;
+String serial = Build.SERIAL;
+String id = Build.ID;
+String manufacturer = Build.MANUFACTURER;
+String model = Build.MODEL;
+String hardware = Build.HARDWARE;
+String product = Build.PRODUCT;
+String tags = Build.TAGS;
+String type = Build.TYPE;
+String codename = Build.VERSION.CODENAME;
+String incremental = Build.VERSION.INCREMENTAL;
+String release = Build.VERSION.RELEASE;
+String sdk_int = "" + Build.VERSION.SDK_INT;
+String host = Build.HOST;
+String user = Build.USER;
+String time = "" + Build.TIME;
+
+String os_version = System.getProperty("os.version");
+String os_name = System.getProperty("os.name");
+String os_arch = System.getProperty("os.arch");
+String user_home = System.getProperty("user.home");
+String user_name = System.getProperty("user.name");
+String user_dir = System.getProperty("user.dir");
+String user_timezone = System.getProperty("user.timezone");
+String path_separator = System.getProperty("path.separator");
+String line_separator = System.getProperty("line.separator");
+String file_separator = System.getProperty("file.separator");
+String java_vendor_url = System.getProperty("java.vendor.url");
+String java_class_path = System.getProperty("java.class.path");
+String java_class_version = System.getProperty("java.class.version");
+String java_vendor = System.getProperty("java.vendor");
+String java_version = System.getProperty("java.version");
+String java_home = System.getProperty("java_home");
+
+</code></pre>
+
+<h3 id="2-Apk应用信息获取"><a href="#2-Apk应用信息获取" class="headerlink" title="2.  Apk应用信息获取"></a>2.  Apk应用信息获取</h3><h6 id="PackManager"><a href="#PackManager" class="headerlink" title="PackManager"></a>PackManager</h6><ul>
+<li>ActivityInfo</li>
+</ul>
+<p>Mainfest文件中的<activity></activity>和<recevier></recevier>之间的信息</p>
+<ul>
+<li>ServiceInfo</li>
+</ul>
+<p>和ActivityInfo类似，封装的是<service></service>之间的所有信息</p>
+<ul>
+<li>ApplicationInfo</li>
+</ul>
+<p>同上,ApplicationInfo包含很多Flag,比如FLAG_SYSTEM表示系统应用，FLAG_EXTERNAL_STORAGE表示的是SDCard上的应用，这些Flag方便我们判断APP的类型</p>
+<ul>
+<li>ResolveInfo</li>
+</ul>
+<p>ResolveInfo比较特殊，它能够返回ActivityInfo,ServiceInfo,ServiceInfo等包含的<intent>的信息，用来帮助我们找到那些包含特定Intent条件的信息，比如分享、播放功能的APP。</intent></p>
+<p>PackageManager常用的方法：</p>
+<ul>
+<li>getPackageManger</li>
+<li>getApplicationInfo</li>
+<li>getApplicationIcon</li>
+<li>getInstalledApplications</li>
+<li>getInstalledPackages</li>
+<li>queryIntentActivities</li>
+<li>queryIntentServices</li>
+<li>resolveActivity</li>
+<li>resolveService</li>
+</ul>
+<h5 id="ActivityManager"><a href="#ActivityManager" class="headerlink" title="ActivityManager"></a>ActivityManager</h5><p>PackageManager侧重的是 获取应用的包信息，而ActivityManager侧重的是 获取运行的应用程序的信息。</p>
+<p>ActivityManager常用的对象：</p>
+<ul>
+<li>ActivityManager.MemoryInfo</li>
+</ul>
+<p>关于系统内存的信息，例如availMem(系统可用内存)、totalMem(总内存)等</p>
+<ul>
+<li>Debug.MemoryInfo</li>
+</ul>
+<p>该MemoryInfo主要用于统计进程下的内存信息</p>
+<ul>
+<li>RunningAppProceeInfo</li>
+</ul>
+<p>运行进程的信息，存储的是与进程相关的信息，例如processName、pid、uid等；</p>
+<ul>
+<li>RunningServiceInfo</li>
+</ul>
+<p>运行服务的信息，存储的是服务进程的信息，例如activeSince(第一次被激活时间)等</p>
+<h5 id="Packages-xml"><a href="#Packages-xml" class="headerlink" title="Packages.xml"></a>Packages.xml</h5><p>在系统初始化的时候，PackageManager的底层实现类PackageManagerService会去扫描系统中的一些特定的目录，并解析其中的apk文件，最后把它获得的应用信息保存到packages.xml文件中，当系统中的应用安装、删除或者升级时，它也会被更新。</p>
+<h3 id="3-Apk反编译"><a href="#3-Apk反编译" class="headerlink" title="3.  Apk反编译"></a>3.  Apk反编译</h3><p><a href="http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2015/0416/2732.html" target="_blank" rel="external">Apk反编译详解</a></p>
+<h3 id="第10章-性能优化"><a href="#第10章-性能优化" class="headerlink" title="第10章  性能优化"></a>第10章  性能优化</h3><h5 id="1-Android-UI渲染机制"><a href="#1-Android-UI渲染机制" class="headerlink" title="1.  Android UI渲染机制"></a>1.  Android UI渲染机制</h5><ul>
+<li><p>人眼所感觉的流畅画面，在40fps ~ 60fps /s，最佳fps是<strong>60fps</strong>左右，那么差不多每16ms系统就要对UI进行渲染和重绘。</p>
+</li>
+<li><p>系统提供了检测UI渲染时间的工具:开发者选项 ——  Profile GPU rendering ——— On screen as bars”</p>
+</li>
+</ul>
+<p><img src="/images/location_on_screen.jpg" alt=""></p>
+<p> 开启之后，屏幕上将显示一些条形图，每条柱状线都包含三部分，蓝色代表测量绘制Display List的时间，红色代表OpenGL渲染Display List所需要的时间，黄色代表CPU等待GPU处理的时间。中间的绿色横线代表VSYNC时间16ms，需要尽量将所有条形图都控制在这条绿线之下。</p>
+<ul>
+<li>避免过度绘制(Overdraw)</li>
+</ul>
+<p><img src="/images/overdraw.png" alt=""></p>
+<ul>
+<li>没有颜色</li>
+</ul>
+<p>意味着没有overdraw。像素只画了一次。</p>
+<ul>
+<li>蓝色</li>
+</ul>
+<p>意味着overdraw</p>
+<ul>
+<li>1倍</li>
+</ul>
+<p>像素绘制了两次。大片的蓝色还是可以接受的（若整个窗口是蓝色的，可以摆脱一层）。</p>
+<ul>
+<li>绿色</li>
+</ul>
+<p>意味着overdraw</p>
+<ul>
+<li>2倍</li>
+</ul>
+<p>像素绘制了三次。中等大小的绿色区域是可以接受的但你应该尝试优化、减少它们。</p>
+<ul>
+<li>浅红</li>
+</ul>
+<p>意味着overdraw 3倍。像素绘制了四次，小范围可以接受。</p>
+<ul>
+<li>暗红</li>
+</ul>
+<p>意味着overdraw 4倍。像素绘制了五次或者更多。这是错误的，要修复它们。</p>
+<h5 id="布局优化"><a href="#布局优化" class="headerlink" title="布局优化"></a>布局优化</h5><ul>
+<li>优化布局层级，Google在文档中建议View树的高度不宜超过10层</li>
+<li>避免嵌套过多无用布局：</li>
+<li>使用标签重用layout</li>
+</ul>
+<p>如果需要在标签中覆盖类似原布局中的android:layout_xxx的属性，就必须在标签中同时指定android:layout_width和android:layout_height属性。</p>
+<ul>
+<li>使用实现view的延迟加载</li>
+</ul>
+<p>ViewStub是一个非常轻量级的组件，它不仅不可见，而且大小为0。</p>
+<ul>
+<li><strong>ViewStub和View.GONE有啥区别？</strong></li>
+</ul>
+<p>它们的共同点是初始时都不会显示，但是前者只会在显示时才去渲染整个布局，而后者在初始化布局树的时候就已经添加到布局树上了，相比之下前者的布局具有更高的效率。</p>
+<h5 id="内存优化"><a href="#内存优化" class="headerlink" title="内存优化"></a>内存优化</h5><p>通常情况下我们所说的内存是指手机的RAM，它包括以下几部分：</p>
+<p>(1) 寄存器：寄存器处于CPU内部，在程序中无法控制</p>
+<p>(2)栈：存放基本数据类型和对象的引用</p>
+<p>(3)堆：存放对象和数组，有虚拟机GC来管理</p>
+<p>(4)静态存储区域(static field)：在固定的位置存放应用程序运行时一直存在的数据，Java在内存中专门划分了一个静态存储区域来管理一些特殊的数据变量，如静态的数据变量</p>
+<p>(5)常量池(constant pool)：虚拟机必须为每个被装在的类维护一个常量池，常量池就是这个类所用的常量的一个有序集合，包括直接常量（基本类型、string）和对其他类型、字段和方法的符号引用。</p>
+<h5 id="代码优化"><a href="#代码优化" class="headerlink" title="代码优化"></a>代码优化</h5><ul>
+<li>使用静态方法，它比普通方法会提高15%左右的访问速度</li>
+<li>尽量不要使用枚举，少用迭代器</li>
+<li>对Cursor、Receiver、Sensor、File等对象，要非常注意对它们的创建、回收与注册、解注册</li>
+<li>使用SurfaceView来替代view进行大量的、频繁的绘图操作；</li>
+<li>尽量使用视图缓存，而不是每次都执行inflate方法解析视图。</li>
+</ul>
+<hr>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;这篇读书笔记的内容主要是 :  第9章 Activity系统信息与安全机制  + 第10章 Android性能优化&lt;/p&gt;
+&lt;p&gt;第8章为Activity生命周期，推荐阅读官方关于Activity生命周期的文档：&lt;a href=&quot;http://developer.android.com/intl/zh-cn/training/basics/activity-lifecycle/starting.html&quot;&gt;管理Activity生命周期&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;关于第10章中的图片优化，同样推荐官方关于Bitmap展示优化的文档，写的很棒：&lt;a href=&quot;http://developer.android.com/intl/zh-cn/training/displaying-bitmaps/index.html&quot;&gt;Displaying Bitmaps Efficiently&lt;/a&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Activity" scheme="http://hiyangyue.github.io/tags/Activity/"/>
+    
+      <category term="Performance Optimization" scheme="http://hiyangyue.github.io/tags/Performance-Optimization/"/>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android群英传》读书笔记（二）</title>
+    <link href="http://hiyangyue.github.io/2015/12/02/reading_note_2/"/>
+    <id>http://hiyangyue.github.io/2015/12/02/reading_note_2/</id>
+    <published>2015-12-01T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Android读书笔记(二) 第5章Scroll分析 + 第6章Android绘图机制与处理技巧</p>
+<h3 id="1-Android坐标系"><a href="#1-Android坐标系" class="headerlink" title="1.    Android坐标系"></a>1.    Android坐标系</h3><p> <img src="/images/location_on_screen.jpg" alt=""></p>
+<p> 屏幕最左上角的顶点作为Android坐标系的原点，从这个点向右是X轴正方向，向下是Y轴正方向，</p>
+<p>View提供的获取坐标的方法：</p>
+<ul>
+<li>getTop()    ：View本身顶边到达父布局顶边的距离</li>
+<li>getLeft()   :View本身左边到达父布局左边的距离</li>
+<li>getRight()  :View本身右边到达父布局右边的距离</li>
+<li><p>getBottom() : View本身底部到达父布局底部的距离</p>
+<p>MotionEvent提供的方法：</p>
+</li>
+<li>getX() ： 获取点击事件距离控件左边的距离(视图坐标)</li>
+<li>getY() :  获取点击事件距离控件右边的距离</li>
+<li>getRawX() : 获取点击事件距离屏幕左边的距离(绝对坐标)</li>
+<li>getRawY() : 获取点击事件距离屏幕右边的距离</li>
+</ul>
+<p>(可以这么理解getX(),getY()是当前View的距离，getRawX(),getRawY()是整个View的距离)</p>
+<a id="more"></a>
+<ol>
+<li>滑动的实现原理</li>
+</ol>
+<p>当触控View时，记下当前View的左边，当手指滑动时，记下滑动之后的位置的坐标，通过两个点之间的距离计算出偏移量，再通过偏移量来修改View的坐标，不断重复这样的步骤，从而实现View滑动过程。</p>
+<h6 id="使用layout-方法"><a href="#使用layout-方法" class="headerlink" title="使用layout()方法"></a>使用layout()方法</h6><p>绝对坐标如下：</p>
+<pre><code>
+@Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        //获取绝对坐标
+        int rawX = (int)event.getRawX();
+        int rawY = (int)event.getRawY();
+
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                //当触控View的时候，记录当前触控的坐标
+                lastX = rawX;
+                lastY = rawY;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //计算偏移量
+                int offsetX = rawX - lastX;
+                int offsetY = rawY - lastY;
+                //在原坐标的基础上加上偏移量
+                view.layout(
+                        view.getLeft() + offsetX,
+                        view.getTop() + offsetY,
+                        view.getRight() + offsetX,
+                        view.getBottom() + offsetY
+                );
+
+                //更新初始坐标
+                lastX = rawX;
+                lastY = rawY;
+
+                break;
+        }
+
+        return true;
+    }
+</code></pre>
+
+
+<p>Android帮我们封装好了左右，上下移动的API，只要计算好偏移量，效果和使用Layout一样。</p>
+<pre><code>
+view.offsetLeftAndRight(offsetX);
+view.offsetTopAndBottom(offsetY);
+</code></pre>
+
+
+<h6 id="使用LayoutParams"><a href="#使用LayoutParams" class="headerlink" title="使用LayoutParams"></a>使用LayoutParams</h6><p>LayoutParams保存了View的参数，所以使用LayoutParams也能动态的修改位置参数。</p>
+<pre><code>
+@Override
+   public boolean onTouchEvent(MotionEvent event) {
+       int x = (int) event.getX();
+       int y = (int) event.getY();
+
+       switch (event.getAction()){
+           case MotionEvent.ACTION_DOWN:
+               //当触控View时，计算当前的坐标
+               lastX = (int) event.getX();
+               lastY = (int) event.getY();
+               break;
+           case MotionEvent.ACTION_MOVE:
+               //计算出偏移量
+               int offsetX = x - lastX;
+               int offsetY = y - lastY;
+
+               //获取当前的LayoutParams
+               LinearLayout.LayoutParams layoutParams =
+                       (LinearLayout.LayoutParams) view.getLayoutParams();
+               layoutParams.leftMargin = view.getLeft() + offsetX;
+               layoutParams.topMargin = view.getTop() + offsetY;
+               //更新layoutParams
+               view.setLayoutParams(layoutParams);
+
+               break;
+       }
+
+       return true;
+   }
+
+</code></pre>
+
+
+<ol>
+<li>ScrollTo &amp;&amp; ScrollBy</li>
+</ol>
+<p>ScrollTo，ScrollBy移动的是<em>当前View的内容</em>，所以想要移动当前的View，代码如下：</p>
+<pre><code>
+((View)getParent()).scrollBy(offsetX,offsetY);
+</code></pre>
+
+
+<p>在使用这种方法移动View的时候，偏移量要设置为负值，可以理解为 移动的是父View的相对位置，子View本身并不移动。</p>
+<p>而他们的区别在于：ScrollTo是移动到一个坐标点，ScrollBy表示的则是移动的增量dX,dY。</p>
+<h3 id="4-Scroller-平滑移动"><a href="#4-Scroller-平滑移动" class="headerlink" title="4.  Scroller(平滑移动)"></a>4.  Scroller(平滑移动)</h3><p>不管是ScrollTo方法还是ScrollBy方法，它们平移的过程是瞬间发生的，有的时候，瞬移会让用户觉得很突兀，应该有一些自然的过度的动画来完成平移的效果。</p>
+<h5 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h5><p>瞬间移动的原理是某个点直接移动到某个点，而平滑移动这是将这两点的距离划分成N个非常小的偏移量，在用于ScrollBy(),顺序移动其中相邻的两个点，这样在视觉上就造成了平移的效果。</p>
+<p>实现步骤：</p>
+<ul>
+<li>初始化Scroller</li>
+<li>重写computeScroll()方法，实现模拟滑动</li>
+<li>starctScroll()开启模拟过程</li>
+</ul>
+ <pre><code>
+ public CustomView(Context context) {
+         super(context);
+         initView(context);
+     }
+
+     private void initView(Context context){
+         mScroller = new Scroller(context);
+     }
+
+     @Override
+     public void computeScroll() {
+         super.computeScroll();
+         //判断Scroller是否已经完成了整个滑动
+         if (mScroller.computeScrollOffset()){
+             ((View)getParent()).scrollTo(
+                     mScroller.getCurrX(),
+                     mScroller.getCurrY());
+
+             //通过重绘来不断调用computeScroll
+             invalidate();
+         }
+     }
+
+     @Override
+     public boolean onTouchEvent(MotionEvent event) {
+
+         int x = (int) event.getX();
+         int y = (int) event.getY();
+
+         switch (event.getAction()){
+             case MotionEvent.ACTION_DOWN:
+                 //当触控View的时候，记录当前触控的坐标
+                 lastX = (int)event.getX();
+                 lastY = (int)event.getY();
+                 break;
+             case MotionEvent.ACTION_MOVE:
+
+                 int offsetX = x - lastX;
+                 int offsetY = y - lastY;
+                 ((View)getParent()).scrollBy(-offsetX,-offsetY);
+                 break;
+             case MotionEvent.ACTION_UP:
+                 //手指移开时，执行滑动过程
+                 View viewGroup = ((View) getParent());
+                 mScroller.startScroll(
+                   viewGroup.getScrollX(),
+                   viewGroup.getScrollY(),
+                   -viewGroup.getScrollX(), -viewGroup.getScrollY());
+                 invalidate();
+                 break;
+
+         }
+
+         return true;
+     }
+</code></pre>
+
+
+<p>因为只能在computeScroll()方法里获取模拟过程中的ScrollX和ScrollY坐标<br>，但还是computeScroll()方法不会被自动调用，只能通过invalidate() ———— draw() ————computeScroll() 来间接调用,所以invalidate()方法必不可少。当模拟结束之后，scroller.computeScrollOffset()方法会返回false,从而中断循环，完成整个平移的过程。</p>
+<hr>
+<h2 id="第六章-Android绘图机制与处理技巧"><a href="#第六章-Android绘图机制与处理技巧" class="headerlink" title="第六章 Android绘图机制与处理技巧"></a>第六章 Android绘图机制与处理技巧</h2><ol>
+<li>屏幕尺寸信息</li>
+</ol>
+<p>屏幕参数</p>
+<ul>
+<li>屏幕大小(屏幕对角线长度，寸)</li>
+<li>分辨率(屏幕的像素点)</li>
+<li>PPI(对角线长度/屏幕大小)</li>
+</ul>
+<p>Android定义了几个标准的DPI :<br><img src="/images/android_dpi.png" alt=""></p>
+<p>如图,Android使用mdpi作为屏幕的标准，在这个屏幕上1px = 1dp,在其他屏幕上通过比例来进行换算。</p>
+<p> 系统提过了TypedValue类帮助转换，以下是常用的单位辅助类</p>
+ <pre><code>
+ public class DisplayUtil {
+
+     //dp转px
+     public static int dp2px(Context context, float dpVal) {
+         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                 dpVal, context.getResources().getDisplayMetrics());
+     }
+
+     //sp转px
+     public static int sp2px(Context context, float spVal) {
+         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+                 spVal, context.getResources().getDisplayMetrics());
+     }
+
+     //px转dp
+     public static float px2dp(Context context, float pxVal) {
+         final float scale = context.getResources().getDisplayMetrics().density;
+         return (pxVal / scale);
+     }
+
+     //px转sp
+     public static float px2sp(Context context, float pxVal) {
+         return (pxVal / context.getResources().getDisplayMetrics().scaledDensity);
+     }
+ }
+ </code></pre>
+
+
+<h3 id="2-2D绘图"><a href="#2-2D绘图" class="headerlink" title="2.2D绘图"></a>2.2D绘图</h3><h5 id="Canvas常用对象"><a href="#Canvas常用对象" class="headerlink" title="Canvas常用对象"></a>Canvas常用对象</h5><ul>
+<li>drawPoint(点)</li>
+<li>drawLine(线)</li>
+<li>drawRect(矩形)</li>
+<li>drawVertices(多边形)</li>
+<li>drawArc(弧)</li>
+<li>drawCircle(圆)</li>
+</ul>
+<h5 id="Paint常用方法"><a href="#Paint常用方法" class="headerlink" title="Paint常用方法"></a>Paint常用方法</h5><ul>
+<li>setAntiAlias()   ———— Paint的锯齿效果</li>
+<li>setColor()       ———— Paint的颜色</li>
+<li>setARGB()        ———— Paint的A,R,G,G的值(也是颜色)</li>
+<li>setAlpha()       ———— Paint透明度</li>
+<li>setTextSize()    ———— 字体大小</li>
+<li>setStyle()       ———— 空心(STROKE)/实心(FILL)</li>
+<li>setStrokeWidth() ———— 空心边框的宽度</li>
+</ul>
+<h3 id="3-XML绘图"><a href="#3-XML绘图" class="headerlink" title="3. XML绘图"></a>3. XML绘图</h3><h6 id="Shape"><a href="#Shape" class="headerlink" title="Shape"></a>Shape</h6><p>shape可以自定义四种形状：</p>
+<ul>
+<li>rectangle: 矩形，默认的形状，可以画出直角矩形、圆角矩形、弧形等</li>
+<li>oval: 椭圆形，用得比较多的是画正圆</li>
+<li>line: 线形，可以画实线和虚线</li>
+<li><p>ring: 环形，可以画环形进度条</p>
+<p>Shape常用的属性</p>
+<ul>
+<li>solid  填充的颜色</li>
+<li>padding 内边距</li>
+<li>gradient 渐变</li>
+<li>corners 设置圆角(只在rectangle下有效)</li>
+<li>stroke 描边</li>
+</ul>
+</li>
+</ul>
+<p>代码：</p>
+<pre><code>
+<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
+
+      <!--圆角-->
+      <corners android:radius="2dp">
+
+      <!--内边距-->
+      <padding android:left="5dp" android:right="5dp" android:top="5dp" android:bottom="5dp">
+
+      <!--填充颜色-->
+      <solid android:color="#FFFFFF">
+
+      <!--边框的宽度和颜色-->
+      <stroke android:color="@color/pink" android:width="3dp">
+
+</stroke></solid></padding></corners></shape>
+</code></pre>
+
+
+<h3 id="4-Selector"><a href="#4-Selector" class="headerlink" title="4. Selector"></a>4. Selector</h3><p>Selector实现的是静态绘图中的时间反馈，通过给不同的事件设置不同的图片，从而获得不同的反馈效果。</p>
+<p>常用属性</p>
+<ul>
+<li>android:state_enabled: 设置触摸或点击事件是否可用状态，一般只在false时设置该属性，表示不可用状态</li>
+<li>android:state_pressed:</li>
+<li>android:state_selected:</li>
+<li>android:state_checked: 设置是否勾选状态，主要用于CheckBox和RadioButto</li>
+<li>android:state_checkable: 设置勾选是否可用状态，类似state_enabled，只是state_enabled会影响触摸或点击事件，而state_checkable影响勾选事件</li>
+<li>android:state_focused: 设置是否获得焦点状态，true表示获得焦点，默认为false</li>
+<li>android:state_window_focused: 设置当前窗口是否获得焦点状态，true表示获得焦点，false表示未获得焦点，例如拉下通知栏或弹出对话框时，当前界面就会失去焦点；另外，ListView的ListItem获得焦点时也会触发true状态，可以理解为当前窗口就是ListItem本身</li>
+<li>android:state_activated: 设置是否被激活状态，true表示被激活，false表示未激活</li>
+</ul>
+<p>(不知道为什么带有Selector标签的代码，显示不出来,代码就放Github)</p>
+<h3 id="5-绘图技巧"><a href="#5-绘图技巧" class="headerlink" title="5. 绘图技巧"></a>5. 绘图技巧</h3><p>Canvas主要方法</p>
+<ul>
+<li>save()       ———— 将之前绘制的内容</li>
+<li>restore()    ———— 将save()前后的图层合并</li>
+<li>translate()  ———— 坐标系的平移</li>
+<li>rotate()     ———— 坐标系的翻转</li>
+</ul>
+<h6 id="最佳实践————绘制仪表盘"><a href="#最佳实践————绘制仪表盘" class="headerlink" title="最佳实践————绘制仪表盘"></a>最佳实践————绘制仪表盘</h6><pre><code>
+@Override
+    protected void onDraw(Canvas canvas) {
+
+
+        // 获取宽高参数
+        int mWidth = getMeasuredWidth();
+        int mHeight = getMeasuredHeight();
+        // 画外圆
+        Paint paintCircle = new Paint();
+        paintCircle.setStyle(Paint.Style.STROKE);
+        paintCircle.setAntiAlias(true);
+        paintCircle.setStrokeWidth(5);
+        canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2, paintCircle);
+        // 画刻度
+        Paint painDegree = new Paint();
+        paintCircle.setStrokeWidth(3);
+        for (int i = 0; i < 24; i++) {
+            // 区分整点与非整点
+            if (i == 0 || i == 6 || i == 12 || i == 18) {
+                painDegree.setStrokeWidth(5);
+                painDegree.setTextSize(30);
+                canvas.drawLine(mWidth / 2, mHeight / 2 - mWidth / 2,
+                        mWidth / 2, mHeight / 2 - mWidth / 2 + 60,
+                        painDegree);
+                String degree = String.valueOf(i);
+                canvas.drawText(degree,
+                        mWidth / 2 - painDegree.measureText(degree) / 2,
+                        mHeight / 2 - mWidth / 2 + 90,
+                        painDegree);
+            } else {
+                painDegree.setStrokeWidth(3);
+                painDegree.setTextSize(15);
+                canvas.drawLine(mWidth / 2, mHeight / 2 - mWidth / 2,
+                        mWidth / 2, mHeight / 2 - mWidth / 2 + 30,
+                        painDegree);
+                String degree = String.valueOf(i);
+                canvas.drawText(degree,
+                        mWidth / 2 - painDegree.measureText(degree) / 2,
+                        mHeight / 2 - mWidth / 2 + 60,
+                        painDegree);
+            }
+            // 通过旋转画布简化坐标运算
+            canvas.rotate(15, mWidth / 2, mHeight / 2);
+        }
+        // 画圆心
+        Paint paintPointer = new Paint();
+        paintPointer.setStrokeWidth(30);
+        canvas.drawPoint(mWidth / 2, mHeight / 2, paintPointer);
+        // 画指针
+        Paint paintHour = new Paint();
+        paintHour.setStrokeWidth(20);
+        Paint paintMinute = new Paint();
+        paintMinute.setStrokeWidth(10);
+        canvas.save();
+        canvas.translate(mWidth / 2, mHeight / 2);
+        canvas.drawLine(0, 0, 100, 100, paintHour);
+        canvas.drawLine(0, 0, 100, 200, paintMinute);
+        canvas.restore();
+
+    }
+</code></pre>
+
+<p>最终效果:<br> <img src="/images/dash_broad.png" alt=""></p>
+<p>图像处理这边暂时用的不过，先略过了。 = =</p>
+<hr>
+<p>参考</p>
+<ul>
+<li><a href="http://www.linuxidc.com/Linux/2015-11/125391.htm?utm_source=tuicool&amp;utm_medium=referral" target="_blank" rel="external">Android中的坐标系以及获取坐标的方法</a></li>
+<li><a href="http://keeganlee.me/post/android/20150830" target="_blank" rel="external">Android样式的开发:shape篇</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Android读书笔记(二) 第5章Scroll分析 + 第6章Android绘图机制与处理技巧&lt;/p&gt;
+&lt;h3 id=&quot;1-Android坐标系&quot;&gt;&lt;a href=&quot;#1-Android坐标系&quot; class=&quot;headerlink&quot; title=&quot;1.    Android坐标系&quot;&gt;&lt;/a&gt;1.    Android坐标系&lt;/h3&gt;&lt;p&gt; &lt;img src=&quot;/images/location_on_screen.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt; 屏幕最左上角的顶点作为Android坐标系的原点，从这个点向右是X轴正方向，向下是Y轴正方向，&lt;/p&gt;
+&lt;p&gt;View提供的获取坐标的方法：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;getTop()    ：View本身顶边到达父布局顶边的距离&lt;/li&gt;
+&lt;li&gt;getLeft()   :View本身左边到达父布局左边的距离&lt;/li&gt;
+&lt;li&gt;getRight()  :View本身右边到达父布局右边的距离&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;getBottom() : View本身底部到达父布局底部的距离&lt;/p&gt;
+&lt;p&gt;MotionEvent提供的方法：&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;getX() ： 获取点击事件距离控件左边的距离(视图坐标)&lt;/li&gt;
+&lt;li&gt;getY() :  获取点击事件距离控件右边的距离&lt;/li&gt;
+&lt;li&gt;getRawX() : 获取点击事件距离屏幕左边的距离(绝对坐标)&lt;/li&gt;
+&lt;li&gt;getRawY() : 获取点击事件距离屏幕右边的距离&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;(可以这么理解getX(),getY()是当前View的距离，getRawX(),getRawY()是整个View的距离)&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Scroll" scheme="http://hiyangyue.github.io/tags/Scroll/"/>
+    
+      <category term="UI" scheme="http://hiyangyue.github.io/tags/UI/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《Android群英传》读书笔记（一）</title>
+    <link href="http://hiyangyue.github.io/2015/11/30/reading_note_1/"/>
+    <id>http://hiyangyue.github.io/2015/11/30/reading_note_1/</id>
+    <published>2015-11-29T16:00:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<ol>
+<li>使用ViewHolder<br>ViewHolder利用了ListView的视图缓存机制，避免了每次调用getView()时使用findViewById实例化控件,下面是使用ViewHolder的一个例子.</li>
+</ol>
+<a id="more"></a>
+<pre><code>
+public final class ViewHolder{
+        public ImageView img;
+        public TextView title;
+    }
+</code></pre>
+
+<pre><code>
+@Override
+    public View getView(int position, View convertView,
+       ViewGroup parent) {
+        ViewHolder holder = null;
+        //判断是否有缓存
+        if (convertView == null){
+            holder = new ViewHolder();
+            //如果没有，则通过LayoutInflater实例化布局
+            convertView = LayoutInflater.from(mContext).
+            inflate(R.layout.adapter,null);
+            holder.img = (ImageView) convertView.findViewById(R.id.img);
+            holder.title = (TextView) convertView.findViewById(R.id.tv);
+            convertView.setTag(holder);
+        }else {
+            //如果已经缓存了，则通过tag来查找
+            holder = (ViewHolder) convertView.getTag();
+        }
+
+        //为布局中控件设置数据
+        holder.img.setBackgroundResource(R.drawable.ic_launcher);
+        holder.title.setText("item");
+
+
+        return null;
+    }
+
+</code></pre>
+
+<hr>
+<p>2.ListView的一些属性</p>
+<ul>
+<li>分割线</li>
+</ul>
+ <pre><code>
+ //分割线的颜色,设置为"@null"时，分割线透明
+ android:divider="@android:color/darker_gray"
+ //设置分割线的高度
+ android:dividerHeight="10dp"
+ //隐藏ListView滚动条
+ android:scrollbars="none"
+ //取消ListView点击效果,使用"@android:color/transparent"效果一样
+ android:listSelector="#00000000"
+ </code></pre>
+
+
+
+
+
+
+
+<ul>
+<li>设置ListView显示在第几项</li>
+</ul>
+ <pre><code>
+ //瞬间滑动
+ listView.setSection(N);
+ //如果瞬间滑动有一点突兀，可以设置平滑移动
+ listView.smoothScrollBy(distance,duration);
+ listView.smoothScrollByOffset(offset);
+ listView.smoothScrollToPosition(index);
+ </code></pre>
+
+
+
+
+
+
+
+<ul>
+<li>动态添加/修改ListView</li>
+</ul>
+ <pre><code>
+adapter.notifyDataSetChanged();
+ </code></pre>
+
+
+
+
+
+
+
+<p>个人觉得如果修改一个数据而要更新整个界面的话，太暴力了，推荐使用RecycleView，有更多的选择。</p>
+<ul>
+<li>处理空ListView<br>当前ListView没有数据的时候，应该以无数据的形式显示。</li>
+</ul>
+<pre><code>
+listView.setEmptyView(R.layout.empty_view);
+</code></pre>
+
+
+<ol>
+<li>ListView监听滑动</li>
+</ol>
+<ul>
+<li>OnTouchListener</li>
+</ul>
+<p>通过监听ACTION_DOWN(触摸时),ACTION_MOVE(移动时),ACTION_UP(离开时)三个时间发生时的坐标，就可以根据坐标判断用户滑动的方向，并在不同的文件同设置相应的逻辑处理事件。<br> <pre><code><br>        public boolean onTouch(View v, MotionEvent event) {<br>            switch (event.getAction()){<br>                case MotionEvent.ACTION_DOWN:<br>                    break;<br>                case MotionEvent.ACTION_MOVE:<br>                    break;<br>                case MotionEvent.ACTION_UP:<br>                    break;<br>  }</code></pre></p>
+<p></p>
+<ul>
+<li>OnScrollListener</li>
+</ul>
+<p>OnScrollListener有两个回调方法————onScrollStatechanged()和onScroll()，onScroll有三种模式：</p>
+<ul>
+<li>OnScrollListener.SCROLL_STATE_IDLE ：滚动停止时</li>
+<li>OnScrollListener.SCROLL_STATE_TOUCH_SCROLL :正在滚动时</li>
+<li><p>OnScrollListener.SCROLL_STATE_TOUCH_FLING :手指用力滑动，ListView根据惯性继续滑动的状态</p>
+<p>onScroll有三个参数</p>
+</li>
+<li>firsrtVisibleItem : 当前能看到的第一个Item的Id</li>
+<li>visibleItemCount ：当前能看到的Item的总数</li>
+<li><p>totalItemCount ： 整个ListView的总数</p>
+<p>所以可以通过特定的条件判断 View是否到底部了，是上滑还是下滑。</p>
+</li>
+</ul>
+<ol>
+<li>最佳实践————自动隐藏显示Toolbar<br>书中的例子，向上滑动显示Toolbar，向下滑动隐藏Toolbar</li>
+</ol>
+<p><a href="https://github.com/hiyangyue/Training/tree/master/ListView" target="_blank" rel="external">代码下载</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;ol&gt;
+&lt;li&gt;使用ViewHolder&lt;br&gt;ViewHolder利用了ListView的视图缓存机制，避免了每次调用getView()时使用findViewById实例化控件,下面是使用ViewHolder的一个例子.&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Performance Optimization" scheme="http://hiyangyue.github.io/tags/Performance-Optimization/"/>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="ListView" scheme="http://hiyangyue.github.io/tags/ListView/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>常用排序算法</title>
+    <link href="http://hiyangyue.github.io/2015/11/24/sorts/"/>
+    <id>http://hiyangyue.github.io/2015/11/24/sorts/</id>
+    <published>2015-11-23T16:00:00.000Z</published>
+    <updated>2015-12-05T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="冒泡排序-Bubble-Sort"><a href="#冒泡排序-Bubble-Sort" class="headerlink" title="冒泡排序(Bubble Sort)"></a>冒泡排序(Bubble Sort)</h4><blockquote>
+<p>冒泡排序（Bubble Sort）是一种简单的排序算法。它重复地走访过要排序的数列，一次比较两个元素，如果他们的顺序错误就把他们交换过来。走访数列的工作是重复地进行直到没有再需要交换，也就是说该数列已经排序完成。这个算法的名字由来是因为越小的元素会经由交换慢慢“浮”到数列的顶端。</p>
+</blockquote>
+<p>步骤：</p>
+<ol>
+<li>从第一个数开始，依次 比较相邻的两个元素</li>
+<li>如果前一个数大于后一个数，则交换它们的位置</li>
+<li>经过一轮遍历之后，最大的元素在这组元素的末端</li>
+<li>重复步骤 1 ~ 2，每次遍历N - 1，如果N = 0 ，则完成排序</li>
+</ol>
+<a id="more"></a>
+<pre><code>
+void bubblesort(int[] a){
+        for(int i = 0 ; i < a.length - 1; i ++){
+            for(int j = 1 ; j < a.length - i - 1; i ++){
+                if( a[j-1] > a[j]){
+                    swap(a[j-1], a[j]);
+                }
+            }
+        }
+    }
+</code></pre>
+
+
+<hr>
+<h4 id="插入排序-Insert-Sort"><a href="#插入排序-Insert-Sort" class="headerlink" title="插入排序(Insert Sort)"></a>插入排序(Insert Sort)</h4><blockquote>
+<p>插入排序（Insertion Sort）是一种简单直观的排序算法。它的工作原理是通过构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入。插入排序在实现上，通常采用in-place排序（即只需用到O(1)的额外空间的排序），因而在从后向前扫描过程中，需要反复把已排序元素逐步向后挪位，为最新元素提供插入空间。</p>
+</blockquote>
+<p>插入排序很像平时的扑克，通常我们在“斗地主”的是时候整理牌的方法时一张一张的来，将每一张牌插入到其他已经有序的牌中的适当的位置，同理，数组当前索引左边的所有元素都是有序的，为了给要插入的元素腾出空间，我们需要将所有元素在插入之前都像右移动一位；另外，可以看出，插入排序的复杂度和<b>输入元素的初始位置有关</b>。</p>
+<p>步骤：</p>
+<ol>
+<li>从第一个元素开始，默认第一个元素已经排好序</li>
+<li>设取出的元素的位置为i，从后向前扫描，若每次比较中，取出的元素小于前面的元素，则前面的元素后移一位(可以理解为i-1)</li>
+<li>循环结束之后，将取出元素插入到当前i的位置</li>
+<li>重复 1 ~ 3</li>
+</ol>
+<pre><code>
+void insertSort(int a[]){  
+        int length=a.length; //数组长度  
+        int j;               //当前值的位置  
+        int i;               //指向j前的位置  
+        int key;             //当前要进行插入排序的值  
+        //从数组的第二个位置开始遍历值  
+        for(j=1;j<length;j++){ key="a[j];" i="j-1;" a[i]比当前值大时，a[i]后移一位,空出i的位置，好让下一次循环的值后移="" while(i="">=0 && a[i]>key){  
+                a[i+1]=a[i]; //将a[i]值后移  
+                i--;         //i前移  
+            }//跳出循环(找到要插入的中间位置或已遍历到0下标)  
+            a[i+1]=key;    //将当前值插入  
+        }  
+    }
+</length;j++){></code></pre>
+
+
+
+
+<hr>
+<h4 id="希尔排序-Shell-Sort"><a href="#希尔排序-Shell-Sort" class="headerlink" title="希尔排序(Shell Sort)"></a>希尔排序(Shell Sort)</h4><p>原本的插入算法，在对大规模的数组进行排序时，由于它只会交换相邻元素的位置，若每次只能一个一个从数组的开端到数组的末端，那么从开端到末端就需要N - 1次。基于这样的观察，希尔排序提出了改进的方法：</p>
+<ol>
+<li>插入排序在对几乎已经排好序的数据操作时，效率高，即可以达到线性排序的效率</li>
+<li>但插入排序一般来说是低效的，因为插入排序每次只能将数据移动一位</li>
+</ol>
+<p>建立在这两点的基础上，希尔排序则是交换不相邻的对数组的局部进行排序，并最终使用插入排序将局部有序的数组进行排序。</p>
+<blockquote>
+<p>h有序数组：对于任意间隔为h的元素都是有序的，</p>
+</blockquote>
+<p>换句话说任意一个h的有序数组就是h个相互有序的数组组成的一个数组，在进行排序时，若h很大，就能很轻松将开端的数组移动到后半部分。</p>
+<p>思路：</p>
+<ol>
+<li>将初始素组分成若干个间隔为h的有效数组</li>
+<li>对这些数组进行排序</li>
+<li>缩小h的取值，重复 1 ~ 2，直到h = 1的时候，完成排序</li>
+</ol>
+<pre><code>
+
+void shellSort(int a[]){
+        int N = a.length;
+        int h = 1;
+        while(h < N /3){
+            h = 3*h + 1;
+        }
+
+        while(h >= 1){
+             for(int i = h ; i < N ; i ++){
+                 for(int j = i ; j >= h && a[j-h] > a[j];j -= h){
+                     exch(a[j-h], a[j]);
+                 }
+             }
+
+             h = h / 3;
+        }
+    }
+</code></pre>
+
+
+
+<h4 id="快速排序-Quick-Sort"><a href="#快速排序-Quick-Sort" class="headerlink" title="快速排序(Quick Sort)"></a>快速排序(Quick Sort)</h4><blockquote>
+<p>设要排序的数组是A[0]……A[N-1]，首先任意选取一个数据（通常选用数组的第一个数）作为关键数据，然后将所有比它小的数都放到它前面，所有比它大的数都放到它后面，这个过程称为一趟快速排序。值得注意的是，快速排序不是一种稳定的排序算法，也就是说，多个相同的值的相对位置也许会在算法结束时产生变动。</p>
+</blockquote>
+<p>思路：</p>
+<ol>
+<li>确定数组中的一个位置，使得当前位置左边的所有数都小于当前的,右边的所有数都大于当前的值。</li>
+</ol>
+<p>确定切分的位置</p>
+<pre><code>
+int partition(int a[],int lo,int high){
+        int x = a[high];
+        int i = lo - 1;
+        for(int j = lo; j < high ; j ++){
+            if(a[j] < x){
+                ++ i;
+                swap(a[i], a[j]);
+            }
+
+        }
+
+        swap(a[i+ 1], a[high]);
+
+        return i + 1;
+    }
+</code></pre>
+
+
+<pre><code>
+void quickSort(int a[],int lo,int high){
+        if(lo < high){
+            int index = partition(a, lo, high);
+            quickSort(a, lo, index - 1);
+            quickSort(a, index + 1, high);
+        }
+    }
+</code></pre>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;冒泡排序-Bubble-Sort&quot;&gt;&lt;a href=&quot;#冒泡排序-Bubble-Sort&quot; class=&quot;headerlink&quot; title=&quot;冒泡排序(Bubble Sort)&quot;&gt;&lt;/a&gt;冒泡排序(Bubble Sort)&lt;/h4&gt;&lt;blockquote&gt;
+&lt;p&gt;冒泡排序（Bubble Sort）是一种简单的排序算法。它重复地走访过要排序的数列，一次比较两个元素，如果他们的顺序错误就把他们交换过来。走访数列的工作是重复地进行直到没有再需要交换，也就是说该数列已经排序完成。这个算法的名字由来是因为越小的元素会经由交换慢慢“浮”到数列的顶端。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;步骤：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从第一个数开始，依次 比较相邻的两个元素&lt;/li&gt;
+&lt;li&gt;如果前一个数大于后一个数，则交换它们的位置&lt;/li&gt;
+&lt;li&gt;经过一轮遍历之后，最大的元素在这组元素的末端&lt;/li&gt;
+&lt;li&gt;重复步骤 1 ~ 2，每次遍历N - 1，如果N = 0 ，则完成排序&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="算法" scheme="http://hiyangyue.github.io/categories/%E7%AE%97%E6%B3%95/"/>
+    
+    
+      <category term="排序" scheme="http://hiyangyue.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
+    
+      <category term="算法" scheme="http://hiyangyue.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>自定义View</title>
+    <link href="http://hiyangyue.github.io/2015/11/24/view/"/>
+    <id>http://hiyangyue.github.io/2015/11/24/view/</id>
+    <published>2015-11-23T16:00:00.000Z</published>
+    <updated>2015-12-05T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>对于View来说，在进行绘制之前，需要知道绘制的坐标和位置。Android API中提供了一个MeasureSpec类来测量View。它有三种模式：</p>
+<ul>
+<li>EXACITY<br>控件的layout_width或者layout_height属性设置具体的值的时使用这种模式</li>
+<li>AT_MOST<br>控件的layout_width或者layout_height属性设置”wrap_content”时使用这种模式</li>
+<li>UNSPECIFIED<br>控件的大小没有限制(The parent has not imposed any constraint on the child，<a href="http://developer.android.com/intl/zh-cn/reference/android/view/View.MeasureSpec.html" target="_blank" rel="external">Developer原文链接</a>)</li>
+</ul>
+<a id="more"></a>
+<p>通过MeasureSpec类可以获取View的Mode和View的size</p>
+<pre><code>int specMode = MeasureSpec.getMode(measureSpec);
+int specSize = measureSpec.getSize(measureSpec);
+</code></pre><p>然后重写onMeasure()中的setMeasuredDimension()方法</p>
+<pre><code>protected void onMeasure(int widthMeasureSpec,
+  int heightMeasureSpec) {
+    setMeasuredDimension(measureWidth(widthMeasureSpec),
+     measureHeight(heightMeasureSpec));
+}
+</code></pre><h2 id="View绘制"><a href="#View绘制" class="headerlink" title="View绘制"></a>View绘制</h2><p>很多情况下，现有的控件不能满足我们的需要，所以就要对现有的控件拓展(比如带边框的ImageView)或者重写View来实现一个新的控件。</p>
+<ul>
+<li>对现有的控件进行拓展<br>比如给TextView添加一个简单的边框，</li>
+</ul>
+<pre><code>
+ private Paint customPaint(){
+            Paint paint = new Paint();
+            //设置颜色
+            paint.setColor(getResources().getColor(R.color.grey));
+            //设置为空心
+            paint.setStyle(Paint.Style.STROKE);
+
+            return paint;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+
+          Paint paint = customPaint();
+          //绘制内层矩形
+          canvas.drawRect(0,0,
+          getMeasuredWidth(),
+          getMeasuredHeight(),
+          paint);
+          //保存状态
+          canvas.save();
+
+          //因为现在只是部分元素修改，所以还需要调用父类的实现
+          super.onDraw(canvas);
+
+          //恢复到保存之前的状态
+          canvas.restore();
+        }
+
+</code></pre>
+
+
+
+<ul>
+<li><p>重写View实现新的组件</p>
+<p>比如绘制一个圆,首先在res/values目录下建立attrs.xml的文件,在定义里声明属性和具体的样式。</p>
+</li>
+</ul>
+<pre><code>  &lt;declare-styleable name=&quot;CustomCircle&quot;&gt;
+   &lt;attr name=&quot;circle_title&quot; format=&quot;string&quot;/&gt;
+   &lt;attr name=&quot;circle_title_size&quot; format=&quot;dimension&quot;/&gt;
+   &lt;attr name=&quot;circle_title_color&quot; format=&quot;color&quot;/&gt;
+   &lt;attr name=&quot;circle_background_color&quot; format=&quot;color&quot;/&gt;
+&lt;/declare-styleable&gt;
+</code></pre><p>然后在然后在获取自定义的属性</p>
+<pre><code>public CustomCircle(Context context,AttributeSet attrs,int defStyleAttr) {
+   super(context, attrs, defStyleAttr);
+   init(context,attrs);
+}
+
+private void init(Context context,AttributeSet attributeSet){
+    TypedArray at = context.obtainStyledAttributes(attributeSet,
+      R.styleable.CustomCircle);
+    circleTitle = at.getString(
+      R.styleable.CustomCircle_circle_title);
+    circleTitleColor = at.getInt(
+      R.styleable.CustomCircle_circle_title_color,R.color.pink);
+    circleTitleSize = at.getDimension(
+      R.styleable.CustomCircle_circle_title_size,20);
+    circleBackgroundColor = at.getInt(
+      R.styleable.CustomCircle_circle_background_color,R.color.grey);
+}
+</code></pre><p>这里有个注意点，构造器的数量要&gt;=3，不然会报这样的错误</p>
+<pre><code>&quot; java not using the 2- or 3-argument View constructors;
+ XML attributes will not work &quot;
+</code></pre><p>接着，跟拓展控件一样，需要重写onDraw()方法</p>
+<pre><code>@Override
+protected void onDraw(Canvas canvas{
+  super.onDraw(canvas);
+
+  Paint paint = paintCircle();
+  canvas.drawCircle(
+    getWidth() / 2f,
+    getHeight() / 2f,
+    getWidth() / 2f,
+    paint);
+  canvas.save();
+
+  paint.setColor(circleTitleColor);
+  canvas.drawText(
+         circleTitle,
+         getWidth() / 2f - boundRect.width(),
+         getHeight() / 2f - boundRect.height(),
+         paint);
+
+}
+
+private Paint paintCircle(){
+  Paint paint = new Paint();
+  //在画笔中设置定义好的属性
+  paint.setTextSize(circleTitleSize);
+  paint.setColor(circleBackgroundColor);
+
+  boundRect = new Rect();
+  paint.getTextBounds(
+   circleTitle,
+   0,
+   circleTitle.length(),
+   boundRect);
+
+  return paint;
+ }
+</code></pre><p>最后和普通的控件一样，直接在XML中设置各个属性即可</p>
+<pre><code>&lt;com.yueyang.customview.CustomCircle
+  custom:circle_title=&quot;Custom Circle&quot;
+  custom:circle_title_color=&quot;@color/pink&quot;
+  custom:circle_background_color=&quot;@color/grey&quot;
+  custom:circle_title_size=&quot;15dp&quot;
+  android:layout_width=&quot;160dp&quot;
+  android:layout_height=&quot;160dp&quot; /&gt;
+</code></pre><p>这里也有一个注意点，在布局中使用第三方组件时，需要引入命名控件</p>
+<pre><code>xmlns:custom=&quot;http://schemas.android.com/apk/res-auto&quot;
+</code></pre><p>(custom非固定，可以随意设置)</p>
+<h2 id="最佳实践————带边框的圆形ImageView"><a href="#最佳实践————带边框的圆形ImageView" class="headerlink" title="最佳实践————带边框的圆形ImageView"></a>最佳实践————带边框的圆形ImageView</h2><p>重复造轮子，参考是<a href="http://blog.csdn.net/gebitan505/article/details/27679587" target="_blank" rel="external">这篇博客</a>，思路是：</p>
+<ol>
+<li>圆形的绘制</li>
+<li>图片的转换</li>
+</ol>
+<ul>
+<li>图片非规则图片装成正方形</li>
+<li>如果图片过大， 从图片的正中截取图片</li>
+<li>将截取到的图片转化成圆形</li>
+<li>将截取到的图片转化成圆形<br> 主要涉及的内容是Paint.setXfermode()方法,<a href="http://blog.csdn.net/hiyohu/article/details/12509731" target="_blank" rel="external">详解链接</a></li>
+</ul>
+<p>这篇要完成的最终的效果：<br><img src="/images/view.png" alt=""></p>
+<h3 id="代码下载-https-github-com-hiyangyue-Training-tree-master-CustomView"><a href="#代码下载-https-github-com-hiyangyue-Training-tree-master-CustomView" class="headerlink" title="代码下载    https://github.com/hiyangyue/Training/tree/master/CustomView"></a><a href="https://github.com/hiyangyue/Training/tree/master/CustomView" target="_blank" rel="external">代码下载</a>    <a href="https://github.com/hiyangyue/Training/tree/master/CustomView" target="_blank" rel="external">https://github.com/hiyangyue/Training/tree/master/CustomView</a></h3><h2 id="本文参考："><a href="#本文参考：" class="headerlink" title="本文参考："></a>本文参考：</h2><ul>
+<li><a href="http://blog.csdn.net/hiyohu/article/details/12509731" target="_blank" rel="external">android Paint之setXfermode方法</a></li>
+<li><a href="http://blog.csdn.net/gebitan505/article/details/27679587" target="_blank" rel="external">自定义View(二)</a></li>
+<li><a href="http://blog.sina.com.cn/s/blog_ac843e3301011umy.html" target="_blank" rel="external">关于Bitmap的createScaleBitmap()的小结 </a></li>
+<li><a href="http://www.cnblogs.com/igrl/archive/2010/07/30/Bitmap_createBitmap.html" target="_blank" rel="external"> Bitmap.createBitmap函数有6个重载方法</a></li>
+<li><a href="http://blog.csdn.net/huangxiaominglipeng/article/details/21597575" target="_blank" rel="external">android.graphics.Rect类的详解</a></li>
+<li><a href="http://byandby.iteye.com/blog/824819" target="_blank" rel="external">android Paint和Color类介绍 使用示例</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;View&quot;&gt;&lt;a href=&quot;#View&quot; class=&quot;headerlink&quot; title=&quot;View&quot;&gt;&lt;/a&gt;View&lt;/h2&gt;&lt;p&gt;对于View来说，在进行绘制之前，需要知道绘制的坐标和位置。Android API中提供了一个MeasureSpec类来测量View。它有三种模式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;EXACITY&lt;br&gt;控件的layout_width或者layout_height属性设置具体的值的时使用这种模式&lt;/li&gt;
+&lt;li&gt;AT_MOST&lt;br&gt;控件的layout_width或者layout_height属性设置”wrap_content”时使用这种模式&lt;/li&gt;
+&lt;li&gt;UNSPECIFIED&lt;br&gt;控件的大小没有限制(The parent has not imposed any constraint on the child，&lt;a href=&quot;http://developer.android.com/intl/zh-cn/reference/android/view/View.MeasureSpec.html&quot;&gt;Developer原文链接&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="View" scheme="http://hiyangyue.github.io/tags/View/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Android 代码混淆</title>
+    <link href="http://hiyangyue.github.io/2013/07/13/proguard/"/>
+    <id>http://hiyangyue.github.io/2013/07/13/proguard/</id>
+    <published>2013-07-13T12:46:25.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近公司用到混淆，我总结了一下用法<a href="http://blog.csdn.net/p106786860/article/details/11974863" target="_blank" rel="external">反编译的教程参考这里</a></p>
+<h5 id="在build-gradle中的配置"><a href="#在build-gradle中的配置" class="headerlink" title="在build.gradle中的配置"></a>在build.gradle中的配置</h5><pre><code>android {
+  buildTypes {
+  release {
+     runProguard true
+     proguardFiles getDefaultProguardFile(&apos;proguard-android.txt&apos;)，&apos;some-other-rules.txt&apos;
+   }
+ }
+}
+</code></pre><h5 id="ProGuard是什么"><a href="#ProGuard是什么" class="headerlink" title="ProGuard是什么"></a>ProGuard是什么</h5><p> ProGuard是一个免费Java类文件收缩，优化，混淆和预校验器。它可以检测并删除未使用的类，字段，方法和属性。它可以优化字节码，并删除未使用的指令。它可以将类、字段和方法使用短无意义的名称进行重命名。</p>
+ <a id="more"></a>
+<h5 id="哪些东西不需要混淆"><a href="#哪些东西不需要混淆" class="headerlink" title="哪些东西不需要混淆"></a>哪些东西不需要混淆</h5><ul>
+<li>反射用到的类</li>
+<li>Android中Manifest中配置的类(Activity、Service等的子类及Framework类默认不进行混淆)</li>
+<li>Jni中调用的类</li>
+<li>用到的第三方的jar包</li>
+<li>表示保留本地的bean文件下的实体类</li>
+<li>特别处理js与本地原生组件之间的调用过程</li>
+<li>自定义不混淆的类</li>
+</ul>
+<h5 id="ProGuard语法"><a href="#ProGuard语法" class="headerlink" title="ProGuard语法"></a>ProGuard语法</h5><ul>
+<li>include {filename}    从给定的文件中读取配置参数</li>
+<li>basedirectory {directoryname}    指定基础目录为以后相对的档案名称</li>
+<li>injars {class_path}    指定要处理的应用程序jar,war,ear和目录   </li>
+<li>outjars {class_path}    指定处理完后要输出的jar,war,ear和目录的名称   </li>
+<li>libraryjars {classpath}    指定要处理的应用程序jar,war,ear和目录所需要的程序库文件   </li>
+<li>dontskipnonpubliclibraryclasses    指定不去忽略非公共的库类。   </li>
+<li>dontskipnonpubliclibraryclassmembers    指定不去忽略包可见的库类的成员。</li>
+</ul>
+<h5 id="保留选项"><a href="#保留选项" class="headerlink" title="保留选项"></a>保留选项</h5><ul>
+<li>keep {Modifier} {class_specification}    保护指定的类文件和类的成员   </li>
+<li>keepclassmembers {modifier} {class_specification}    保护指定类的成员，如果此类受到保护他们会保护的更好  </li>
+<li>keepclasseswithmembers {class_specification}    保护指定的类和类的成员，但条件是所有指定的类和类成员是要存在。   </li>
+<li>keepnames {class_specification}    保护指定的类和类的成员的名称（如果他们不会压缩步骤中删除）   </li>
+<li>keepclassmembernames {class_specification}    保护指定的类的成员的名称（如果他们不会压缩步骤中删除）   </li>
+<li>keepclasseswithmembernames {class_specification}    保护指定的类和类的成员的名称，如果所有指定的类成员出席（在压缩步骤之后）   </li>
+<li>printseeds {filename}    列出类和类的成员-keep选项的清单，标准输出到给定的文件  </li>
+</ul>
+<h5 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h5><p>(一般第三方包的主页会有关于该项目的混淆规范，如果不确定的话。)</p>
+<pre><code>#指定压缩级别
+-optimizationpasses 5
+#使用大小写混合
+-dontusemixedcaseclassnames
+#混淆第三方jar
+-dontskipnonpubliclibraryclasses
+#混淆时预验
+-dontpreverify
+#混淆记录日志
+-verbose
+#混淆时采用的代码
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+
+#support-v4
+-keep class android.support.v4.** { *; }
+-keep public class * extends android.support.v4.**
+
+#四大组件,Fragment
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+-keep public class * extends android.app.Fragment
+
+#因为FastJson使用了序列化，所以不能混淆序列化接口
+-keep public class * implements java.io.Serializable {
+public *;
+}
+
+#Serializable,enum
+-keepclassmembers class * implements java.io.Serializable {
+static final long serialVersionUID;
+private static final java.io.ObjectStreamField[] serialPersistentFields;
+private void writeObject(java.io.ObjectOutputStream);
+private void readObject(java.io.ObjectInputStream);
+java.lang.Object writeReplace();
+java.lang.Object readResolve();
+}
+
+# Parcelable
+-keep class * implements android.os.Parcelable {
+  public static final android.os.Parcelable$Creator *;
+}
+
+## FastJson
+#-dontwarn android.support.**
+#-dontwarn com.alibaba.fastjson.**
+#-dontskipnonpubliclibraryclassmembers
+#-dontskipnonpubliclibraryclasses
+#
+#-libraryjars libs/fastjson.jar
+#-keep class com.alibaba.fastjson.** { *; }
+
+#资源类
+-keepclassmembers class **.R$* {
+public static &lt;fields&gt;;
+}
+
+#保持注解，及使用注解的Activity不被混淆
+-keep class * extends java.lang.annotation.Annotation {*;}
+-keep class com.otb.designerassist.activity.** {*;}
+
+###混淆FastJson
+-dontwarn com.alibaba.fastjson.**
+-keep class com.alibaba.fastjson.** {*;}
+
+# EventBus
+-keepclassmembers class ** {
+public void onEvent*(**);
+}
+
+# 自定义组件
+-keep public class * extends android.view.View {
+public &lt;init&gt;(android.content.Context);
+public &lt;init&gt;(android.content.Context, android.util.AttributeSet);
+public &lt;init&gt;(android.content.Context, android.util.AttributeSet, int);
+public void set*(...);
+}
+
+# native 方法
+-keepclasseswithmembernames class * {
+native &lt;methods&gt;;
+}
+
+# realm
+-keep class io.realm.annotations.RealmModule
+-keep @io.realm.annotations.RealmModule class *
+-keep class io.realm.internal.Keep
+-keep @io.realm.internal.Keep class * { *; }
+-dontwarn javax.**
+-dontwarn io.realm.**
+
+# 友盟
+-dontshrink
+-dontoptimize
+-dontwarn com.google.android.maps.**
+-dontwarn android.webkit.WebView
+-dontwarn com.umeng.**
+-dontwarn com.tencent.weibo.sdk.**
+-dontwarn com.facebook.**
+
+-keep enum com.facebook.**
+-keepattributes Exceptions,InnerClasses,Signature
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+
+-keep public interface com.facebook.**
+-keep public interface com.tencent.**
+-keep public interface com.umeng.socialize.**
+-keep public interface com.umeng.socialize.sensor.**
+-keep public interface com.umeng.scrshot.**
+
+-keep public class com.umeng.socialize.* {*;}
+-keep public class javax.**
+-keep public class android.webkit.**
+
+-keep class com.facebook.**
+-keep class com.umeng.scrshot.**
+-keep public class com.tencent.** {*;}
+-keep class com.umeng.socialize.sensor.**
+
+-keep class com.tencent.mm.sdk.modelmsg.WXMediaMessage {*;}
+
+-keep class com.tencent.mm.sdk.modelmsg.** implements com.tencent.mm.sdk.modelmsg.WXMediaMessage$IMediaObject {*;}
+
+-keep class im.yixin.sdk.api.YXMessage {*;}
+-keep class im.yixin.sdk.api.** implements im.yixin.sdk.api.YXMessage$YXMessageData{*;}
+
+-keep public class [your_pkg].R$*{
+public static final int *;
+}
+
+-keep class com.zhelectronic.gchcz.networkpacket
+-keep class com.zhelectronic.gchcz.data
+</code></pre><p>参考 :</p>
+<ul>
+<li><a href="http://blog.csdn.net/fengyuzhengfan/article/details/43876197" target="_blank" rel="external">Android代码混淆之混淆规则</a></li>
+<li><a href="http://blog.csdn.net/p106786860/article/details/11974863" target="_blank" rel="external">日积月累：Proguard进行源代码混淆和崩溃日志反混淆</a></li>
+<li><a href="http://ticktick.blog.51cto.com/823160/1413066" target="_blank" rel="external">Android开发实践：利用ProGuard进行代码混淆</a></li>
+<li><a href="http://proguard.sourceforge.net/" target="_blank" rel="external">sourceforge</a></li>
+<li><a href="http://developer.android.com/tools/help/proguard.html" target="_blank" rel="external">developer.android.com</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近公司用到混淆，我总结了一下用法&lt;a href=&quot;http://blog.csdn.net/p106786860/article/details/11974863&quot;&gt;反编译的教程参考这里&lt;/a&gt;&lt;/p&gt;
+&lt;h5 id=&quot;在build-gradle中的配置&quot;&gt;&lt;a href=&quot;#在build-gradle中的配置&quot; class=&quot;headerlink&quot; title=&quot;在build.gradle中的配置&quot;&gt;&lt;/a&gt;在build.gradle中的配置&lt;/h5&gt;&lt;pre&gt;&lt;code&gt;android {
+  buildTypes {
+  release {
+     runProguard true
+     proguardFiles getDefaultProguardFile(&amp;apos;proguard-android.txt&amp;apos;)，&amp;apos;some-other-rules.txt&amp;apos;
+   }
+ }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&quot;ProGuard是什么&quot;&gt;&lt;a href=&quot;#ProGuard是什么&quot; class=&quot;headerlink&quot; title=&quot;ProGuard是什么&quot;&gt;&lt;/a&gt;ProGuard是什么&lt;/h5&gt;&lt;p&gt; ProGuard是一个免费Java类文件收缩，优化，混淆和预校验器。它可以检测并删除未使用的类，字段，方法和属性。它可以优化字节码，并删除未使用的指令。它可以将类、字段和方法使用短无意义的名称进行重命名。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Proguard" scheme="http://hiyangyue.github.io/tags/Proguard/"/>
+    
+  </entry>
+  
+</feed>
