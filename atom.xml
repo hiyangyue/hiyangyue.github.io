@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://hiyangyue.github.io/"/>
-  <updated>2017-07-07T09:50:26.000Z</updated>
+  <updated>2017-07-24T14:31:50.000Z</updated>
   <id>http://hiyangyue.github.io/</id>
   
   <author>
@@ -14,6 +14,117 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Android中测试用例的关注点</title>
+    <link href="http://hiyangyue.github.io/2017/07/24/test_case/"/>
+    <id>http://hiyangyue.github.io/2017/07/24/test_case/</id>
+    <published>2017-07-23T16:00:00.000Z</published>
+    <updated>2017-07-24T14:31:50.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在编写测试案例的时候，一方面根据需求来对具体的模块进行操作，验证是否符合预期；另一方面就是对一些边界情况进行模拟。这里对Android中测试时需要考虑的点做了一些总结。</p>
+<h3 id="1-业务和流程"><a href="#1-业务和流程" class="headerlink" title="1.业务和流程"></a>1.业务和流程</h3><p>需考虑以下因素对逻辑造成的影响 ：</p>
+<ul>
+<li>用户类型 ：登录/未登录</li>
+<li>用户状态 ：在线/离线</li>
+<li>流程跳转 ：其他关联的业务逻辑是否受到影响</li>
+<li>流程状态 ：前一步/后一步操作</li>
+</ul>
+<h3 id="2-边界场景"><a href="#2-边界场景" class="headerlink" title="2.边界场景"></a>2.边界场景</h3><p>正常流程测试完成以后，还应考虑一些特殊场景和边界情况：</p>
+<h5 id="网络情况"><a href="#网络情况" class="headerlink" title="网络情况"></a>网络情况</h5><ul>
+<li>不同运营商、地区的表现</li>
+<li>移动网络/Wifi</li>
+<li>网络中断，网络恢复场景的逻辑处理</li>
+<li>流量消耗是否符合预期</li>
+<li>无网络情况</li>
+</ul>
+<h5 id="数据边界"><a href="#数据边界" class="headerlink" title="数据边界"></a>数据边界</h5><ul>
+<li>空值</li>
+<li>最大值/最小值(打赏)</li>
+<li>数值过长/过短(比如昵称)</li>
+</ul>
+<h5 id="控件边界"><a href="#控件边界" class="headerlink" title="控件边界"></a>控件边界</h5><ul>
+<li>连续多次点击</li>
+</ul>
+<h5 id="中断测试"><a href="#中断测试" class="headerlink" title="中断测试"></a>中断测试</h5><ul>
+<li>锁屏：解锁以后查看检测操作是否正常</li>
+<li>应用切换：切换到其他应用，将一段时间再返回</li>
+<li>加载：加载过程中 按home/返回键/任务键删除</li>
+</ul>
+<h5 id="权限测试："><a href="#权限测试：" class="headerlink" title="权限测试："></a>权限测试：</h5><ul>
+<li>重要权限被禁用</li>
+<li>被系统自带的安全软件禁止</li>
+</ul>
+<h3 id="3-控件测试"><a href="#3-控件测试" class="headerlink" title="3.控件测试"></a>3.控件测试</h3><h5 id="文本框"><a href="#文本框" class="headerlink" title="文本框"></a>文本框</h5><ul>
+<li>空值</li>
+<li>特殊符号%@&amp;</li>
+<li>文本的长度（最大/最小）</li>
+<li>是否可以点击 &amp;&amp; 点击以后的z</li>
+<li>是否可以复制/换行</li>
+<li>禁止某些特定的字符</li>
+</ul>
+<h5 id="按钮"><a href="#按钮" class="headerlink" title="按钮"></a>按钮</h5><ul>
+<li>状态 : 点击/不可点击</li>
+<li>行为：是否可以连续点击</li>
+</ul>
+<h5 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h5><ul>
+<li>列表数量为0</li>
+<li>下拉刷新，数据的变化</li>
+<li>下拉数据</li>
+<li>列表的排序</li>
+<li>列表Footer的状态</li>
+</ul>
+<h5 id="键盘"><a href="#键盘" class="headerlink" title="键盘"></a>键盘</h5><ul>
+<li>消失/隐藏</li>
+</ul>
+<h3 id="4-兼容性测试"><a href="#4-兼容性测试" class="headerlink" title="4.兼容性测试"></a>4.兼容性测试</h3><h5 id="系统版本"><a href="#系统版本" class="headerlink" title="系统版本"></a>系统版本</h5><ul>
+<li>4.1 ~ 4.4</li>
+<li>4.4 </li>
+<li>5.0 ~ 6.0</li>
+<li>7.0 + </li>
+</ul>
+<h5 id="分辨率"><a href="#分辨率" class="headerlink" title="分辨率"></a>分辨率</h5><ul>
+<li>800 * 400</li>
+<li>720 * 1280</li>
+<li>1920 * 1080</li>
+<li>2560 * 1536</li>
+</ul>
+<h5 id="CPU架构"><a href="#CPU架构" class="headerlink" title="CPU架构"></a>CPU架构</h5><ul>
+<li>x86</li>
+<li>arm</li>
+</ul>
+<h3 id="5-升级-覆盖测试"><a href="#5-升级-覆盖测试" class="headerlink" title="5.升级/覆盖测试"></a>5.升级/覆盖测试</h3><ul>
+<li>应用数据 ：（登录状态、历史数据）</li>
+<li>重要功能 ：推送是否正常、编辑器草稿是否正常</li>
+<li>卸载版本：重要数据不被清除</li>
+</ul>
+<h3 id="6-性能测试"><a href="#6-性能测试" class="headerlink" title="6.性能测试"></a>6.性能测试</h3><ul>
+<li>启动时间</li>
+<li>耗电情况</li>
+<li>内存占用</li>
+<li>流量消耗</li>
+<li>流畅度（GPU呈现模式分析）</li>
+</ul>
+<hr>
+<p>参考：</p>
+<ul>
+<li><a href="https://tech.meituan.com/testcase-templete.html" target="_blank" rel="external">使用模板快速编写测试用例</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在编写测试案例的时候，一方面根据需求来对具体的模块进行操作，验证是否符合预期；另一方面就是对一些边界情况进行模拟。这里对Android中测试时需要考虑的点做了一些总结。&lt;/p&gt;
+&lt;h3 id=&quot;1-业务和流程&quot;&gt;&lt;a href=&quot;#1-业务和流程&quot; class=&quot;heade
+    
+    </summary>
+    
+      <category term="测试" scheme="http://hiyangyue.github.io/categories/%E6%B5%8B%E8%AF%95/"/>
+    
+    
+      <category term="测试" scheme="http://hiyangyue.github.io/tags/%E6%B5%8B%E8%AF%95/"/>
+    
+  </entry>
   
   <entry>
     <title>LinkedList原理实现</title>
@@ -397,26 +508,6 @@
   </entry>
   
   <entry>
-    <title>HashMap的实现</title>
-    <link href="http://hiyangyue.github.io/2015/12/14/hash_map/"/>
-    <id>http://hiyangyue.github.io/2015/12/14/hash_map/</id>
-    <published>2015-12-14T15:13:00.000Z</published>
-    <updated>2017-07-07T09:50:26.000Z</updated>
-    
-    <summary type="html">
-    
-    </summary>
-    
-      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
-    
-    
-      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
-    
-      <category term="Context" scheme="http://hiyangyue.github.io/tags/Context/"/>
-    
-  </entry>
-  
-  <entry>
     <title>Context ,getApplicationContext(),getBaseContext()的区别</title>
     <link href="http://hiyangyue.github.io/2015/12/14/context/"/>
     <id>http://hiyangyue.github.io/2015/12/14/context/</id>
@@ -455,6 +546,26 @@
 &lt;blockquote&gt;
 &lt;p&gt;Interface to global information about an application environment. This is an abstract class whose implementation is provided by the Android system. It allows access to application-specific resources and classes, as well as up-calls for application-level operations such as launching activities, broadcasting and receiving intents, etc.&lt;/p&gt;
 &lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/categories/Android/"/>
+    
+    
+      <category term="Android" scheme="http://hiyangyue.github.io/tags/Android/"/>
+    
+      <category term="Context" scheme="http://hiyangyue.github.io/tags/Context/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>HashMap的实现</title>
+    <link href="http://hiyangyue.github.io/2015/12/14/hash_map/"/>
+    <id>http://hiyangyue.github.io/2015/12/14/hash_map/</id>
+    <published>2015-12-14T15:13:00.000Z</published>
+    <updated>2017-07-07T09:50:26.000Z</updated>
+    
+    <summary type="html">
     
     </summary>
     
